@@ -1,0 +1,65 @@
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { JwtPayload } from '../types/auth.types';
+
+// เพิ่ม user ใน Request type
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JwtPayload;
+    }
+  }
+}
+
+// Middleware ตรวจสอบ Token
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // 1. ดึง token จาก header
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access token required',
+      });
+    }
+
+    // 2. แยก token ออกมา
+    const token = authHeader.split(' ')[1];
+
+    // 3. ตรวจสอบ token
+    const secret = process.env.JWT_SECRET as string;
+    const decoded = jwt.verify(token, secret) as JwtPayload;
+
+    // 4. เก็บข้อมูล user ไว้ใน request
+    req.user = decoded;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token',
+    });
+  }
+};
+
+// Middleware ตรวจสอบ Role
+export const authorize = (...roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authenticated',
+      });
+    }
+
+    if (!roles.includes(req.user.type)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to access this resource',
+      });
+    }
+
+    next();
+  };
+};

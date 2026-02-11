@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ตาราง Department (แผนก)
+model Department {
+  id   String @id @default(cuid())
+  name String @db.VarChar(100)
+
+  users User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("departments")
+}
+
+// ตาราง User (ผู้ใช้งาน)
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique @db.VarChar(100)
+  phone        String? @db.VarChar(15)
+  status       String  @default("active") @db.VarChar(20)
+  type         String  @default("staff") @db.VarChar(20)
+  password     String  @db.VarChar(255)
+  position     String? @db.VarChar(50)
+  firstName    String  @db.VarChar(50)
+  lastName     String  @db.VarChar(50)
+  departmentId String
+
+  department       Department    @relation(fields: [departmentId], references: [id])
+  bookings         Booking[]     @relation("UserBookings")
+  approvedBookings Booking[]     @relation("ApprovedBookings")
+  managedRooms     MeetingRoom[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ตาราง MeetingRoom (ห้องประชุม)
+model MeetingRoom {
+  id          String  @id @default(cuid())
+  status      String  @default("available") @db.VarChar(20)
+  image       String? @db.VarChar(255)
+  name        String  @db.VarChar(100)
+  location    String  @db.VarChar(100)
+  capacity    Int
+  description String? @db.Text
+  managerId   String?
+
+  manager    User?           @relation(fields: [managerId], references: [id])
+  bookings   Booking[]
+  equipments RoomEquipment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("meeting_rooms")
+}
+
+// ตาราง Booking (การจอง)
+model Booking {
+  id            String    @id @default(cuid())
+  title         String    @db.VarChar(100)
+  description   String?   @db.Text
+  status        String    @default("pending") @db.VarChar(20)
+  startDatetime DateTime
+  endDatetime   DateTime
+  userId        String
+  roomId        String
+  approverId    String?
+
+  user       User        @relation("UserBookings", fields: [userId], references: [id])
+  room       MeetingRoom @relation(fields: [roomId], references: [id])
+  approver   User?       @relation("ApprovedBookings", fields: [approverId], references: [id])
+  equipments BookingEquipment[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  approvedAt DateTime?
+
+  @@map("bookings")
+}
+
+// ตาราง BookingEquipment (อุปกรณ์ที่เลือกใช้ในการจอง)
+model BookingEquipment {
+  bookingId   String
+  equipmentId String
+  quantity    Int    @default(1)
+
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@id([bookingId, equipmentId])
+  @@map("booking_equipments")
+}
+
+// ตาราง Equipment (รายการอุปกรณ์)
+model Equipment {
+  id   String @id @default(cuid())
+  name String @db.VarChar(100)
+
+  rooms    RoomEquipment[]
+  bookings BookingEquipment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("equipments")
+}
+
+// ตาราง RoomEquipment (อุปกรณ์ในห้อง)
+model RoomEquipment {
+  roomId      String
+  equipmentId String
+  quantity    Int    @default(1)
+
+  room      MeetingRoom @relation(fields: [roomId], references: [id])
+  equipment Equipment   @relation(fields: [equipmentId], references: [id])
+
+  @@id([roomId, equipmentId])
+  @@map("room_equipments")
+}
