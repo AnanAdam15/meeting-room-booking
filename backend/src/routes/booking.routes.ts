@@ -30,17 +30,17 @@ router.put('/:id', authenticate, bookingController.updateBooking);
 // PATCH /api/bookings/:id/cancel
 router.patch('/:id/cancel', authenticate, bookingController.cancelBooking);
 
-// ===== Routes สำหรับ Admin เท่านั้น =====
+// ===== Routes สำหรับ Admin + Room Manager =====
 
 // ดูการจองทั้งหมด
 // GET /api/bookings
-router.get('/', authenticate, authorize('admin'), bookingController.getAllBookings);
+router.get('/', authenticate, authorize('admin', 'room_manager'), bookingController.getAllBookings);
 
 // อนุมัติ/ปฏิเสธการจอง
 // PATCH /api/bookings/:id/approve
-router.patch('/:id/approve', authenticate, authorize('admin'), bookingController.approveBooking);
+router.patch('/:id/approve', authenticate, authorize('admin', 'room_manager'), bookingController.approveBooking);
 
-// ลบการจอง
+// ลบการจอง (admin เท่านั้น)
 // DELETE /api/bookings/:id
 router.delete('/:id', authenticate, authorize('admin'), bookingController.deleteBooking);
 

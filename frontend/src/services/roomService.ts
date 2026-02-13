@@ -42,3 +42,17 @@ export const uploadRoomImage = async (id: string, file: File): Promise<ApiRespon
   });
   return response.data;
 };
+
+  // เพิ่ม dropdown ในฟอร์มห้อง
+export interface RoomManager {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  type: string;
+}
+
+export const getRoomManagers = async (): Promise<ApiResponse<RoomManager[]>> => {
+  const response = await api.get('/rooms/managers');
+  return response.data;
+};

@@ -8,6 +8,9 @@ const router = Router();
 // GET /api/rooms - ดึงห้องทั้งหมด (ทุกคนดูได้)
 router.get('/', roomController.getAllRooms);
 
+// GET /api/rooms/managers - ดึง user ที่เป็น room_manager/admin (ต้องอยู่ก่อน /:id)
+router.get('/managers', authenticate, roomController.getRoomManagers);
+
 // GET /api/rooms/:id - ดึงห้องตาม ID
 router.get('/:id', roomController.getRoomById);
 

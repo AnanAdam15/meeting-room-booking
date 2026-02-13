@@ -12,16 +12,18 @@ const Sidebar = () => {
   ];
 
   // เมนูสำหรับ admin
- const adminMenuItems = [
+const adminMenuItems = [
   { path: '/admin/bookings', label: 'จัดการการจอง', icon: '✅' },
   { path: '/admin/rooms', label: 'จัดการห้องประชุม', icon: '⚙️' },
+  { path: '/admin/users', label: 'จัดการผู้ใช้', icon: '👤' },
+  { path: '/admin/departments', label: 'จัดการแผนก', icon: '🏢' },
   { path: '/admin/reports', label: 'รายงานสรุป', icon: '📊' },
 ];
 
-  // เมนูสำหรับ room_manager
+  // เมนูสำหรับ room_manager approver
   const managerMenuItems = [
-    { path: '/admin/rooms', label: 'จัดการห้องประชุม', icon: '⚙️' },
-  ];
+     { path: '/admin/bookings', label: 'จัดการการจอง', icon: '✅' },
+];
 
   // เลือกเมนูพิเศษตาม role
   const extraMenuItems = isAdmin ? adminMenuItems : isRoomManager ? managerMenuItems : [];

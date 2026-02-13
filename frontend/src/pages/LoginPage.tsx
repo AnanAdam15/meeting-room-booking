@@ -100,14 +100,14 @@ const LoginPage = () => {
               onClick={() => { setEmail('staff@hospital.com'); setPassword('password123'); }}
               className="w-full text-left px-3 py-2 bg-gray-50 rounded-lg text-sm hover:bg-gray-100 transition"
             >
-              👤 <span className="font-medium">Staff:</span> staff@hospital.com
+              👤 <span className="font-medium">Memmber:</span> staff@hospital.com
             </button>
               <button
               type="button"
               onClick={() => { setEmail('manager@company.com'); setPassword('password123'); }}
               className="w-full text-left px-3 py-2 bg-gray-50 rounded-lg text-sm hover:bg-gray-100 transition"
             >
-             🏢 <span className="font-medium">Room Manager:</span> manager@company.com
+             🏢 <span className="font-medium">Approve:</span> manager@company.com
             </button>
           </div>
         </div>

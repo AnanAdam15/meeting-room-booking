@@ -3,6 +3,7 @@ import type { Room, CreateRoomInput } from '../../types/room';
 import * as roomService from '../../services/roomService';
 import * as equipmentService from '../../services/equipmentService';
 import type { Equipment, RoomEquipment } from '../../services/equipmentService';
+import type { RoomManager } from '../../services/roomService';
 
 const AdminRoomsPage = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -21,6 +22,10 @@ const AdminRoomsPage = () => {
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Room Manager state
+  const [managers, setManagers] = useState<RoomManager[]>([]);
+  const [managerId, setManagerId] = useState('');
+
   // Equipment state
   const [allEquipments, setAllEquipments] = useState<Equipment[]>([]);
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
@@ -32,6 +37,7 @@ const AdminRoomsPage = () => {
   useEffect(() => {
     loadRooms();
     loadAllEquipments();
+    loadManagers();
   }, []);
 
   const loadRooms = async () => {
@@ -54,17 +60,27 @@ const AdminRoomsPage = () => {
     }
   };
 
+  // โหลดผู้ดูแลห้องประชุม
+  const loadManagers = async () => {
+    try {
+      const response = await roomService.getRoomManagers();
+      if (response.success && response.data) setManagers(response.data);
+    } catch (error) {
+      console.error('โหลดผู้ดูแลไม่สำเร็จ:', error);
+    }
+  };
+
   // ===== Room Form =====
   const openAddForm = () => {
     setEditingRoom(null);
-    setName(''); setLocation(''); setCapacity(10); setDescription(''); setStatus('available'); setFormError('');
+    setName(''); setLocation(''); setCapacity(10); setDescription(''); setStatus('available'); setManagerId(''); setFormError('');
     setShowForm(true);
   };
 
   const openEditForm = (room: Room) => {
     setEditingRoom(room);
     setName(room.name); setLocation(room.location); setCapacity(room.capacity);
-    setDescription(room.description || ''); setStatus(room.status); setFormError('');
+    setDescription(room.description || ''); setStatus(room.status); setManagerId(room.managerId || ''); setFormError('');
     setShowForm(true);
   };
 
@@ -77,9 +93,9 @@ const AdminRoomsPage = () => {
     setIsSubmitting(true);
     try {
       if (editingRoom) {
-        await roomService.updateRoom(editingRoom.id, { name, location, capacity, description: description || undefined, status });
+        await roomService.updateRoom(editingRoom.id, { name, location, capacity, description: description || undefined, status, managerId: managerId || undefined });
       } else {
-        const input: CreateRoomInput = { name, location, capacity, description: description || undefined };
+        const input: CreateRoomInput = { name, location, capacity, description: description || undefined, managerId: managerId || undefined };
         await roomService.createRoom(input);
       }
       closeForm(); loadRooms();
@@ -236,6 +252,15 @@ const AdminRoomsPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียด</label>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="อุปกรณ์ในห้อง, หมายเหตุ" rows={3} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ผู้ดูแลห้อง</label>
+                <select value={managerId} onChange={(e) => setManagerId(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                  <option value="">-- ไม่ระบุผู้ดูแล --</option>
+                  {managers.map((m) => (
+                    <option key={m.id} value={m.id}>{m.firstName} {m.lastName} ({m.email})</option>
+                  ))}
+                </select>
               </div>
               {editingRoom && (
                 <div>

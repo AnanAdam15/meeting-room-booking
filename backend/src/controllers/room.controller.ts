@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as roomService from '../services/room.service';
+import prisma from '../config/db';
 
 // สร้างห้องใหม่
 export const createRoom = async (req: Request, res: Response): Promise<void> => {
@@ -92,6 +93,28 @@ export const deleteRoom = async (req: Request, res: Response): Promise<void> => 
     });
   }
 };
+// ดึง user ที่เป็น room_manager หรือ admin
+export const getRoomManagers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const managers = await prisma.user.findMany({
+      where: {
+        type: { in: ['room_manager', 'admin'] },
+        status: 'active',
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        type: true,
+      },
+      orderBy: { firstName: 'asc' },
+    });
+    res.json({ success: true, data: managers });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาด' });
+  }
+};
 
 // อัพโหลดรูปห้อง
 export const uploadRoomImage = async (req: Request, res: Response): Promise<void> => {
@@ -122,3 +145,4 @@ export const uploadRoomImage = async (req: Request, res: Response): Promise<void
     });
   }
 };
+

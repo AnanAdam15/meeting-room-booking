@@ -9,6 +9,8 @@ import MyBookingsPage from './pages/MyBookingsPage';
 import AdminBookingsPage from './pages/admin/AdminBookingsPage';
 import AdminRoomsPage from './pages/admin/AdminRoomsPage';
 import ReportPage from './pages/admin/ReportPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminDepartmentsPage from './pages/admin/AdminDepartmentsPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
@@ -69,12 +71,15 @@ function App() {
         <Route path="/bookings/new" element={<CreateBookingPage />} />
         <Route path="/my-bookings" element={<MyBookingsPage />} />
 
-        {/* Admin only */}
-        <Route path="/admin/bookings" element={<AdminRoute><AdminBookingsPage /></AdminRoute>} />
-        <Route path="/admin/reports" element={<AdminRoute><ReportPage /></AdminRoute>} />
-
         {/* Admin + Room Manager */}
-        <Route path="/admin/rooms" element={<RoomManagerRoute><AdminRoomsPage /></RoomManagerRoute>} />
+        <Route path="/admin/bookings" element={<RoomManagerRoute><AdminBookingsPage /></RoomManagerRoute>} />
+
+        {/* Admin only */}
+        <Route path="/admin/rooms" element={<AdminRoute><AdminRoomsPage /></AdminRoute>} />
+        <Route path="/admin/reports" element={<AdminRoute><ReportPage /></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+        <Route path="/admin/departments" element={<AdminRoute><AdminDepartmentsPage /></AdminRoute>} />
+        
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

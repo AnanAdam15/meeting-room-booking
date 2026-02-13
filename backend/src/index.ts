@@ -8,6 +8,10 @@ import bookingRoutes from './routes/booking.routes';
 import { startReminderScheduler } from './utils/scheduler';
 import reportRoutes from './routes/report.routes';
 import equipmentRoutes from './routes/equipment.routes';
+import departmentRoutes from './routes/department.routes';
+import userRoutes from './routes/user.routes';
+
+
 
 // โหลดค่าจากไฟล์ .env
 dotenv.config();
@@ -28,6 +32,8 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/equipments', equipmentRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/users', userRoutes);
 
 // Route ทดสอบ
 app.get('/', (req, res) => {
