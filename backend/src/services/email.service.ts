@@ -18,7 +18,7 @@ export const sendBookingApproved = async (
     d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
   const info = await transporter.sendMail({
-    from: '"ระบบจองห้องประชุม 🏥" <noreply@hospital.com>',
+   from: `"ระบบจองห้องประชุม 🏥" <${process.env.SMTP_USER || 'noreply@hospital.com'}>`,
     to: toEmail,
     subject: `✅ การจองได้รับการอนุมัติ: ${bookingTitle}`,
     html: `
@@ -57,7 +57,8 @@ export const sendBookingRejected = async (
   bookingTitle: string,
   roomName: string,
   startDatetime: Date,
-  endDatetime: Date
+  endDatetime: Date,
+  reason?: string  // เพิ่มตรงนี้
 ) => {
   const transporter = await getTransporter();
 
@@ -67,7 +68,7 @@ export const sendBookingRejected = async (
     d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
   const info = await transporter.sendMail({
-    from: '"ระบบจองห้องประชุม 🏥" <noreply@hospital.com>',
+    from: `"ระบบจองห้องประชุม 🏥" <${process.env.SMTP_USER || 'noreply@hospital.com'}>`,
     to: toEmail,
     subject: `❌ การจองถูกปฏิเสธ: ${bookingTitle}`,
     html: `
@@ -83,6 +84,9 @@ export const sendBookingRejected = async (
             <tr><td style="padding: 8px; color: #6b7280;">ห้องประชุม:</td><td style="padding: 8px;">${roomName}</td></tr>
             <tr><td style="padding: 8px; color: #6b7280;">วันที่:</td><td style="padding: 8px;">${formatDate(startDatetime)}</td></tr>
             <tr><td style="padding: 8px; color: #6b7280;">เวลา:</td><td style="padding: 8px;">${formatTime(startDatetime)} - ${formatTime(endDatetime)}</td></tr>
+            <tr><td style="padding: 8px; color: #6b7280;">เวลา:</td><td style="padding: 8px;">${formatTime(startDatetime)} - ${formatTime(endDatetime)}</td></tr>
+            ${reason ? `<tr><td style="padding: 8px; color: #6b7280;">เหตุผล:</td><td style="padding: 8px; font-weight: bold; color: #EF4444;">${reason}</td></tr>` : ''}
+          </table>
           </table>
           <p>กรุณาติดต่อผู้ดูแลระบบหากต้องการข้อมูลเพิ่มเติม</p>
           <p style="color: #6b7280; font-size: 14px;">ระบบจองห้องประชุม โรงพยาบาล</p>
@@ -116,7 +120,7 @@ export const sendNewBookingNotification = async (
     d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
   const info = await transporter.sendMail({
-    from: '"ระบบจองห้องประชุม 🏥" <noreply@hospital.com>',
+    from: `"ระบบจองห้องประชุม 🏥" <${process.env.SMTP_USER || 'noreply@hospital.com'}>`,
     to: adminEmail,
     subject: `📋 คำขอจองใหม่: ${bookingTitle}`,
     html: `
@@ -161,7 +165,7 @@ export const sendMeetingReminder = async (
     d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
   const info = await transporter.sendMail({
-    from: '"ระบบจองห้องประชุม 🏥" <noreply@hospital.com>',
+   from: `"ระบบจองห้องประชุม 🏥" <${process.env.SMTP_USER || 'noreply@hospital.com'}>`,
     to: toEmail,
     subject: `⏰ เตือน: การประชุมในอีก 1 ชั่วโมง - ${bookingTitle}`,
     html: `

@@ -7,6 +7,17 @@ const AdminBookingsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
 
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectingBookingId, setRejectingBookingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+
+  // เพิ่มตรงนี้
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [approvingBookingId, setApprovingBookingId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingBookingId, setDeletingBookingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
     loadBookings();
   }, []);
@@ -24,37 +35,66 @@ const AdminBookingsPage = () => {
     }
   };
 
-  // อนุมัติ
-  const handleApprove = async (id: string) => {
-    if (!window.confirm('ต้องการอนุมัติการจองนี้หรือไม่?')) return;
+// อนุมัติ
+  const openApproveModal = (id: string) => {
+    setApprovingBookingId(id);
+    setShowApproveModal(true);
+  };
+
+  const handleApprove = async () => {
+    if (!approvingBookingId) return;
     try {
-      await bookingService.approveBooking(id, { status: 'approved' });
+      await bookingService.approveBooking(approvingBookingId, { status: 'approved' });
+      setShowApproveModal(false);
+      setApprovingBookingId(null);
       loadBookings();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
-    }
+   } catch (err: any) {
+  setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+}
   };
 
   // ปฏิเสธ
-  const handleReject = async (id: string) => {
-    if (!window.confirm('ต้องการปฏิเสธการจองนี้หรือไม่?')) return;
-    try {
-      await bookingService.approveBooking(id, { status: 'rejected' });
-      loadBookings();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
-    }
+ const openRejectModal = (bookingId: string) => {
+  setRejectingBookingId(bookingId);
+  setRejectReason('');
+  setShowRejectModal(true);
+};
+
+const handleReject = async () => {
+  if (!rejectingBookingId) return;
+  if (!rejectReason.trim()) {
+   setErrorMessage('กรุณากรอกเหตุผลในการปฏิเสธ');
+    return;
+  }
+  try {
+    await bookingService.approveBooking(rejectingBookingId, {
+      status: 'rejected',
+      reason: rejectReason.trim(),
+    });
+    setShowRejectModal(false);
+    setRejectingBookingId(null);
+    loadBookings();
+ } catch (err: any) {
+  setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+}
+};
+
+// ลบ
+  const openDeleteModal = (id: string) => {
+    setDeletingBookingId(id);
+    setShowDeleteModal(true);
   };
 
-  // ลบ
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('ต้องการลบการจองนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+  const handleDelete = async () => {
+    if (!deletingBookingId) return;
     try {
-      await bookingService.deleteBooking(id);
+      await bookingService.deleteBooking(deletingBookingId);
+      setShowDeleteModal(false);
+      setDeletingBookingId(null);
       loadBookings();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
-    }
+   } catch (err: any) {
+  setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+}
   };
 
   const getStatusBadge = (status: string) => {
@@ -116,6 +156,12 @@ const AdminBookingsPage = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">จัดการการจอง</h1>
         <p className="text-gray-500 mt-1">อนุมัติ/ปฏิเสธคำขอจองห้องประชุม</p>
+        {errorMessage && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
+          <span>{errorMessage}</span>
+          <button onClick={() => setErrorMessage('')} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+        </div>
+      )}
       </div>
 
       {/* สรุปจำนวน */}
@@ -200,22 +246,19 @@ const AdminBookingsPage = () => {
                       <div className="flex gap-2">
                         {booking.status === 'pending' && (
                           <>
-                            <button
-                              onClick={() => handleApprove(booking.id)}
+                           <button
+                              onClick={() => openApproveModal(booking.id)}
                               className="px-3 py-1.5 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition"
                             >
                               อนุมัติ
                             </button>
-                            <button
-                              onClick={() => handleReject(booking.id)}
-                              className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition"
-                            >
-                              ปฏิเสธ
+                           <button onClick={() => openRejectModal(booking.id)} className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-lg hover:bg-red-100">
+                             ปฏิเสธ
                             </button>
                           </>
                         )}
                         <button
-                          onClick={() => handleDelete(booking.id)}
+                          onClick={() => openDeleteModal(booking.id)}
                           className="px-3 py-1.5 text-xs bg-gray-50 text-gray-500 rounded-lg hover:bg-gray-100 transition"
                         >
                           ลบ
@@ -226,6 +269,68 @@ const AdminBookingsPage = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      {showRejectModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-xl w-full max-w-md p-6">
+      <h2 className="text-lg font-bold text-gray-800 mb-4">❌ ปฏิเสธการจอง</h2>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">เหตุผลในการปฏิเสธ *</label>
+        <textarea
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          placeholder="เช่น ห้องถูกใช้งานเพื่อกิจกรรมอื่น, เวลาไม่เหมาะสม"
+          rows={3}
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none"
+        />
+      </div>
+      <div className="flex gap-3 mt-4">
+        <button onClick={handleReject} className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium hover:bg-red-700 transition">
+          ยืนยันปฏิเสธ
+        </button>
+        <button onClick={() => { setShowRejectModal(false); setRejectingBookingId(null); }} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{/* Approve Modal */}
+      {showApproveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-6 text-center">
+            <div className="text-4xl mb-3">✅</div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">อนุมัติการจอง</h2>
+            <p className="text-gray-500 text-sm mb-5">ต้องการอนุมัติการจองนี้หรือไม่?</p>
+            <div className="flex gap-3">
+              <button onClick={handleApprove} className="flex-1 bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 transition">
+                ยืนยันอนุมัติ
+              </button>
+              <button onClick={() => { setShowApproveModal(false); setApprovingBookingId(null); }} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-6 text-center">
+            <div className="text-4xl mb-3">🗑️</div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">ลบการจอง</h2>
+            <p className="text-gray-500 text-sm mb-5">ต้องการลบการจองนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+            <div className="flex gap-3">
+              <button onClick={handleDelete} className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium hover:bg-red-700 transition">
+                ยืนยันลบ
+              </button>
+              <button onClick={() => { setShowDeleteModal(false); setDeletingBookingId(null); }} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                ยกเลิก
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -87,7 +87,7 @@ export const createBooking = async (userId: string, input: CreateBookingInput) =
     });
 
     for (const admin of admins) {
-      await emailService.sendNewBookingNotification(
+       emailService.sendNewBookingNotification(
         admin.email,
         `${booker?.firstName} ${booker?.lastName}`,
         input.title,
@@ -330,7 +330,8 @@ export const approveBooking = async (
         booking.title,
         booking.room.name,
         booking.startDatetime,
-        booking.endDatetime
+        booking.endDatetime,
+        input.reason  // เพิ่มตรงนี้
       );
     }
   } catch (emailError) {

@@ -10,6 +10,7 @@ const CreateBookingPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preSelectedRoomId = searchParams.get('roomId');
+  
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,8 +23,18 @@ const CreateBookingPage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('10:00');
+
+  // สร้างตัวเลือกเวลา 09:00 - 18:00 (ทุก 30 นาที)
+  const timeOptions: string[] = [];
+  for (let h = 9; h <= 18; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      if (h === 18 && m > 0) break;
+      timeOptions.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+    }
+  }
+  
 
   // Equipment State
   const [roomEquipments, setRoomEquipments] = useState<RoomEquipment[]>([]);
@@ -94,8 +105,23 @@ const CreateBookingPage = () => {
     const startDatetime = `${date}T${startTime}:00`;
     const endDatetime = `${date}T${endTime}:00`;
 
+    // เช็คเวลาต้องอยู่ในช่วง 09:00-18:00
+    if (startTime < '09:00' || startTime > '18:00' || endTime < '09:00' || endTime > '18:00') {
+      setError('เวลาจองต้องอยู่ในช่วง 09:00 - 18:00 เท่านั้น');
+      return;
+    }
+
+    // เช็คเวลาสิ้นสุดต้องมากกว่าเวลาเริ่ม
     if (endTime <= startTime) {
       setError('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
+      return;
+    }
+
+    // เช็คเวลาที่ผ่านไปแล้ว (ถ้าเป็นวันนี้)
+    const now = new Date();
+    const bookingStart = new Date(`${date}T${startTime}:00`);
+    if (bookingStart < now) {
+      setError('ไม่สามารถจองเวลาที่ผ่านมาแล้วได้ กรุณาเลือกเวลาใหม่');
       return;
     }
 
@@ -231,11 +257,19 @@ const CreateBookingPage = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">เวลาเริ่ม <span className="text-red-500">*</span></label>
-            <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+            <select value={startTime} onChange={(e) => setStartTime(e.target.value)} required className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>{t} น.</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">เวลาสิ้นสุด <span className="text-red-500">*</span></label>
-            <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+            <select value={endTime} onChange={(e) => setEndTime(e.target.value)} required className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              {timeOptions.filter((t) => t > startTime).map((t) => (
+                <option key={t} value={t}>{t} น.</option>
+              ))}
+            </select>
           </div>
         </div>
 

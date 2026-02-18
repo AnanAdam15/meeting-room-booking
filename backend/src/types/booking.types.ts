@@ -17,4 +17,5 @@ export interface UpdateBookingInput {
 
 export interface ApproveBookingInput {
   status: 'approved' | 'rejected';
+  reason?: string;  // เพิ่มเหตุผล
 }

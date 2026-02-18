@@ -57,4 +57,5 @@ export interface UpdateBookingInput {
 // ข้อมูลสำหรับอนุมัติ/ปฏิเสธ
 export interface ApproveBookingInput {
   status: 'approved' | 'rejected';
+  reason?: string;  // เพิ่มเหตุผลสำหรับการปฏิเสธ
 }
