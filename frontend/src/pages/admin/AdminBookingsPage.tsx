@@ -35,7 +35,7 @@ const AdminBookingsPage = () => {
     }
   };
 
-// อนุมัติ
+  // อนุมัติ
   const openApproveModal = (id: string) => {
     setApprovingBookingId(id);
     setShowApproveModal(true);
@@ -48,38 +48,38 @@ const AdminBookingsPage = () => {
       setShowApproveModal(false);
       setApprovingBookingId(null);
       loadBookings();
-   } catch (err: any) {
-  setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
-}
+    } catch (err: any) {
+      setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    }
   };
 
   // ปฏิเสธ
- const openRejectModal = (bookingId: string) => {
-  setRejectingBookingId(bookingId);
-  setRejectReason('');
-  setShowRejectModal(true);
-};
+  const openRejectModal = (bookingId: string) => {
+    setRejectingBookingId(bookingId);
+    setRejectReason('');
+    setShowRejectModal(true);
+  };
 
-const handleReject = async () => {
-  if (!rejectingBookingId) return;
-  if (!rejectReason.trim()) {
-   setErrorMessage('กรุณากรอกเหตุผลในการปฏิเสธ');
-    return;
-  }
-  try {
-    await bookingService.approveBooking(rejectingBookingId, {
-      status: 'rejected',
-      reason: rejectReason.trim(),
-    });
-    setShowRejectModal(false);
-    setRejectingBookingId(null);
-    loadBookings();
- } catch (err: any) {
-  setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
-}
-};
+  const handleReject = async () => {
+    if (!rejectingBookingId) return;
+    if (!rejectReason.trim()) {
+      setErrorMessage('กรุณากรอกเหตุผลในการปฏิเสธ');
+      return;
+    }
+    try {
+      await bookingService.approveBooking(rejectingBookingId, {
+        status: 'rejected',
+        reason: rejectReason.trim(),
+      });
+      setShowRejectModal(false);
+      setRejectingBookingId(null);
+      loadBookings();
+    } catch (err: any) {
+      setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    }
+  };
 
-// ลบ
+  // ลบ
   const openDeleteModal = (id: string) => {
     setDeletingBookingId(id);
     setShowDeleteModal(true);
@@ -92,9 +92,9 @@ const handleReject = async () => {
       setShowDeleteModal(false);
       setDeletingBookingId(null);
       loadBookings();
-   } catch (err: any) {
-  setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
-}
+    } catch (err: any) {
+      setErrorMessage(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -156,12 +156,6 @@ const handleReject = async () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">จัดการการจอง</h1>
         <p className="text-gray-500 mt-1">อนุมัติ/ปฏิเสธคำขอจองห้องประชุม</p>
-        {errorMessage && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
-          <span>{errorMessage}</span>
-          <button onClick={() => setErrorMessage('')} className="text-red-400 hover:text-red-600 ml-4">✕</button>
-        </div>
-      )}
       </div>
 
       {/* สรุปจำนวน */}
@@ -192,11 +186,10 @@ const handleReject = async () => {
           <button
             key={tab.value}
             onClick={() => setFilter(tab.value)}
-            className={`px-4 py-2 text-sm rounded-lg transition ${
-              filter === tab.value
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
-            }`}
+            className={`px-4 py-2 text-sm rounded-lg transition ${filter === tab.value
+              ? 'bg-blue-600 text-white'
+              : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+              }`}
           >
             {tab.label}
           </button>
@@ -246,14 +239,14 @@ const handleReject = async () => {
                       <div className="flex gap-2">
                         {booking.status === 'pending' && (
                           <>
-                           <button
+                            <button
                               onClick={() => openApproveModal(booking.id)}
                               className="px-3 py-1.5 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition"
                             >
                               อนุมัติ
                             </button>
-                           <button onClick={() => openRejectModal(booking.id)} className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-lg hover:bg-red-100">
-                             ปฏิเสธ
+                            <button onClick={() => openRejectModal(booking.id)} className="px-3 py-1.5 text-xs bg-red-50 text-red-700 rounded-lg hover:bg-red-100">
+                              ปฏิเสธ
                             </button>
                           </>
                         )}
@@ -273,31 +266,37 @@ const handleReject = async () => {
         </div>
       )}
       {showRejectModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-xl w-full max-w-md p-6">
-      <h2 className="text-lg font-bold text-gray-800 mb-4">❌ ปฏิเสธการจอง</h2>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">เหตุผลในการปฏิเสธ *</label>
-        <textarea
-          value={rejectReason}
-          onChange={(e) => setRejectReason(e.target.value)}
-          placeholder="เช่น ห้องถูกใช้งานเพื่อกิจกรรมอื่น, เวลาไม่เหมาะสม"
-          rows={3}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none"
-        />
-      </div>
-      <div className="flex gap-3 mt-4">
-        <button onClick={handleReject} className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium hover:bg-red-700 transition">
-          ยืนยันปฏิเสธ
-        </button>
-        <button onClick={() => { setShowRejectModal(false); setRejectingBookingId(null); }} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-          ยกเลิก
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-{/* Approve Modal */}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-md p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">❌ ปฏิเสธการจอง</h2>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">เหตุผลในการปฏิเสธ *</label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="เช่น ห้องถูกใช้งานเพื่อกิจกรรมอื่น, เวลาไม่เหมาะสม"
+                rows={3}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none"
+              />
+              {errorMessage && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
+                  <span>{errorMessage}</span>
+                  <button onClick={() => setErrorMessage('')} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3 mt-4">
+              <button onClick={handleReject} className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium hover:bg-red-700 transition">
+                ยืนยันปฏิเสธ
+              </button>
+              <button onClick={() => { setShowRejectModal(false); setRejectingBookingId(null); }} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Approve Modal */}
       {showApproveModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-sm p-6 text-center">
