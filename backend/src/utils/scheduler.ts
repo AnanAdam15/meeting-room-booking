@@ -8,7 +8,7 @@ export const startReminderScheduler = () => {
   setInterval(async () => {
     try {
       const now = new Date();
-      const oneHourLater = new Date(now.getTime() + 5 * 60 * 1000);
+      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
       const fiveMinAgo = new Date(oneHourLater.getTime() - 5 * 60 * 1000);
 
       // หาการจองที่จะเริ่มในอีก ~1 ชั่วโมง (ช่วง 5 นาที)

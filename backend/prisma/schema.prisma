@@ -37,6 +37,7 @@ model User {
   bookings         Booking[]     @relation("UserBookings")
   approvedBookings Booking[]     @relation("ApprovedBookings")
   managedRooms     MeetingRoom[]
+  notifications    Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -81,6 +82,7 @@ model Booking {
   room       MeetingRoom @relation(fields: [roomId], references: [id])
   approver   User?       @relation("ApprovedBookings", fields: [approverId], references: [id])
   equipments BookingEquipment[]
+  notifications Notification[]
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -128,3 +130,36 @@ model RoomEquipment {
   @@id([roomId, equipmentId])
   @@map("room_equipments")
 }
+
+
+
+// =============================================
+// เพิ่มท้ายไฟล์ schema.prisma (ต่อจาก RoomEquipment)
+// =============================================
+
+// ตาราง Notification (การแจ้งเตือน)
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   @db.VarChar(50)    // booking_approved, booking_rejected, new_booking_pending, booking_reminder
+  title     String   @db.VarChar(200)
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  userId    String                       // ผู้รับแจ้งเตือน
+  bookingId String?                      // การจองที่เกี่ยวข้อง (optional)
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// =============================================
+// แล้วเพิ่ม relation ใน User model:
+//   notifications Notification[]
+//
+// แล้วเพิ่ม relation ใน Booking model:
+//   notifications Notification[]
+// =============================================
