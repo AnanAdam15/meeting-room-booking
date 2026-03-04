@@ -60,3 +60,10 @@ export const deleteBooking = async (id: string): Promise<ApiResponse> => {
   const response = await api.delete(`/bookings/${id}`);
   return response.data;
 };
+
+
+// ดึงการจองตาม ID
+export const getRoomBookingsByDate = async (roomId: string, date: string) => {
+  const response = await api.get(`/bookings/room/${roomId}?date=${date}`);;
+  return response.data;
+};

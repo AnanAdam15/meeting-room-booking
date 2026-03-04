@@ -10,6 +10,7 @@ import reportRoutes from './routes/report.routes';
 import equipmentRoutes from './routes/equipment.routes';
 import departmentRoutes from './routes/department.routes';
 import userRoutes from './routes/user.routes';
+import notificationRoutes from './routes/notification.routes';
 
 
 
@@ -34,6 +35,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/equipments', equipmentRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Route ทดสอบ
 app.get('/', (req, res) => {

@@ -87,8 +87,8 @@ export const getMyBookings = async (req: Request, res: Response) => {
 export const getBookingsByRoom = async (req: Request, res: Response) => {
   try {
     const roomId = req.params.roomId as string;
-    const bookings = await bookingService.getBookingsByRoomId(roomId);
-
+    const { date } = req.query;
+    const bookings = await bookingService.getBookingsByRoomId(roomId, date as string);
     res.json({
       success: true,
       data: bookings,
@@ -185,5 +185,35 @@ export const deleteBooking = async (req: Request, res: Response) => {
       success: false,
       message,
     });
+  }
+};
+
+// ทดสอบส่งอีเมลเตือนการประชุม
+export const testSendReminder = async (req: Request, res: Response) => {
+  try {
+    const { bookingId } = req.body;
+    const booking = await bookingService.getBookingById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'ไม่พบการจองนี้' });
+    }
+
+    if (booking.status !== 'approved') {
+      return res.status(400).json({ success: false, message: 'การจองนี้ยังไม่ได้รับการอนุมัติ' });
+    }
+
+    const emailService = await import('../services/email.service');
+    await emailService.sendMeetingReminder(
+      booking.user.email,
+      `${booking.user.firstName} ${booking.user.lastName}`,
+      booking.title,
+      booking.room.name,
+      booking.startDatetime
+    );
+
+    res.json({ success: true, message: `ส่งอีเมลเตือนไปที่ ${booking.user.email} สำเร็จ` });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาด';
+    res.status(500).json({ success: false, message });
   }
 };

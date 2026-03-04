@@ -14,6 +14,9 @@ router.post('/', authenticate, bookingController.createBooking);
 // GET /api/bookings/my
 router.get('/my', authenticate, bookingController.getMyBookings);
 
+// ทดสอบส่งการแจ้งเตือน (admin เท่านั้น)
+router.post('/test-reminder', authenticate, authorize('admin'), bookingController.testSendReminder);
+
 // ดูการจองตาม ID
 // GET /api/bookings/:id
 router.get('/:id', authenticate, bookingController.getBookingById);

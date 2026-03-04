@@ -1,4 +1,5 @@
 import * as emailService from './email.service';
+import * as notificationService from './notification.service';
 import prisma from '../config/db';
 import {
   CreateBookingInput,
@@ -99,6 +100,17 @@ export const createBooking = async (userId: string, input: CreateBookingInput) =
   } catch (emailError) {
     console.error('ส่งอีเมลแจ้งเตือนไม่สำเร็จ:', emailError);
   }
+  // แจ้งเตือนในระบบ
+  try {
+    await notificationService.notifyNewBooking(
+      booking.id,
+      booking.title,
+      booking.room.name,
+      `${booking.user.firstName} ${booking.user.lastName}`
+    );
+  } catch (notifError) {
+    console.error('สร้างแจ้งเตือนไม่สำเร็จ:', notifError);
+  }
 
   return booking;
 };
@@ -167,13 +179,22 @@ export const getBookingsByUserId = async (userId: string) => {
   return bookings;
 };
 
-// ดึงการจองตามห้อง
-export const getBookingsByRoomId = async (roomId: string) => {
+// ดึงการจองตามห้อง (รองรับ filter วันที่)
+export const getBookingsByRoomId = async (roomId: string, date?: string) => {
+  const where: any = {
+    roomId,
+    status: { notIn: ['cancelled', 'rejected'] },
+  };
+
+  if (date) {
+    const startOfDay = new Date(`${date}T00:00:00`);
+    const endOfDay = new Date(`${date}T23:59:59`);
+    where.startDatetime = { lt: endOfDay };
+    where.endDatetime = { gt: startOfDay };
+  }
+
   const bookings = await prisma.booking.findMany({
-    where: {
-      roomId,
-      status: { notIn: ['cancelled', 'rejected'] },
-    },
+    where,
     include: {
       user: {
         select: { id: true, firstName: true, lastName: true },
@@ -337,6 +358,27 @@ export const approveBooking = async (
   } catch (emailError) {
     console.error('ส่งอีเมลแจ้งเตือนไม่สำเร็จ:', emailError);
   }
+  // แจ้งเตือนในระบบ
+  try {
+    if (input.status === 'approved') {
+      await notificationService.notifyBookingApproved(
+        booking.id,
+        booking.title,
+        booking.room.name,
+        booking.user.id
+      );
+    } else if (input.status === 'rejected') {
+      await notificationService.notifyBookingRejected(
+        booking.id,
+        booking.title,
+        booking.room.name,
+        booking.user.id,
+        input.reason
+      );
+    }
+  } catch (notifError) {
+    console.error('สร้างแจ้งเตือนไม่สำเร็จ:', notifError);
+  }
 
   return booking;
   
@@ -358,3 +400,4 @@ export const deleteBooking = async (id: string) => {
     where: { id },
   });
 };
+
