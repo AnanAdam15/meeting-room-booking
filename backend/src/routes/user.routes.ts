@@ -7,6 +7,8 @@ const router = Router();
 router.get('/', authenticate, authorize('admin'), userController.getAllUsers);
 router.post('/', authenticate, authorize('admin'), userController.createUser);
 router.put('/:id', authenticate, authorize('admin'), userController.updateUser);
-router.delete('/:id', authenticate, authorize('admin'), userController.deleteUser);
+router.get('/:id/dependencies', authenticate, authorize('admin'), userController.getUserDependencies);
+router.patch('/:id/deactivate', authenticate, authorize('admin'), userController.deactivateUser);
+router.patch('/:id/activate', authenticate, authorize('admin'), userController.activateUser);
 
 export default router;

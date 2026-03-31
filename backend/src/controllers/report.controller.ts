@@ -8,10 +8,10 @@ export const getRoomUsageReport = async (req: Request, res: Response) => {
 
     // ถ้าไม่ระบุวันที่ ใช้เดือนปัจจุบัน
     const start = startDate
-      ? new Date(startDate as string)
+      ? new Date(`${startDate}T00:00:00`)
       : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const end = endDate
-      ? new Date(endDate as string)
+      ? new Date(`${endDate}T23:59:59`)
       : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59);
 
     // ดึงการจองทั้งหมดในช่วงเวลา
@@ -60,7 +60,9 @@ export const getRoomUsageReport = async (req: Request, res: Response) => {
       totalRooms: rooms.length,
       totalBookings: bookings.length,
       totalHours: Math.round(roomStats.reduce((sum, r) => sum + r.totalHours, 0) * 10) / 10,
-      roomStats: roomStats.sort((a, b) => b.totalBookings - a.totalBookings),
+      roomStats: roomStats.sort((a, b) =>
+        b.totalBookings - a.totalBookings || b.totalHours - a.totalHours
+      ),
     };
 
     res.json({

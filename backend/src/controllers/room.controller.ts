@@ -22,7 +22,8 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
 // ดึงห้องทั้งหมด
 export const getAllRooms = async (req: Request, res: Response): Promise<void> => {
   try {
-    const rooms = await roomService.getAllRooms();
+    const isAdminOrManager = !!(req.user && ['admin', 'approver'].includes(req.user.type));
+    const rooms = await roomService.getAllRooms(isAdminOrManager);
     res.status(200).json({
       success: true,
       data: rooms,
@@ -93,12 +94,12 @@ export const deleteRoom = async (req: Request, res: Response): Promise<void> => 
     });
   }
 };
-// ดึง user ที่เป็น room_manager หรือ admin
+// ดึง user ที่เป็น approver หรือ admin
 export const getRoomManagers = async (req: Request, res: Response): Promise<void> => {
   try {
     const managers = await prisma.user.findMany({
       where: {
-        type: { in: ['room_manager', 'admin'] },
+        type: { in: ['approver', 'admin'] },
         status: 'active',
       },
       select: {

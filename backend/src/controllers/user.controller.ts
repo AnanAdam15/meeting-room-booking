@@ -32,6 +32,24 @@ export const createUser = async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName, phone, position, type, departmentId } = req.body;
 
+    if (!email || !password || !firstName || !lastName || !departmentId) {
+      res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบ' });
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ success: false, message: 'รูปแบบอีเมลไม่ถูกต้อง' });
+      return;
+    }
+    if (password.length < 6) {
+      res.status(400).json({ success: false, message: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' });
+      return;
+    }
+    if (phone && !/^[0-9+\-\s()]{9,15}$/.test(phone)) {
+      res.status(400).json({ success: false, message: 'รูปแบบเบอร์โทรไม่ถูกต้อง' });
+      return;
+    }
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       res.status(400).json({ success: false, message: 'อีเมลนี้มีอยู่ในระบบแล้ว' });
@@ -68,6 +86,22 @@ export const updateUser = async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const { email, firstName, lastName, phone, position, type, status, departmentId, password } = req.body;
 
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        res.status(400).json({ success: false, message: 'รูปแบบอีเมลไม่ถูกต้อง' });
+        return;
+      }
+    }
+    if (password && password.length < 6) {
+      res.status(400).json({ success: false, message: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' });
+      return;
+    }
+    if (phone && !/^[0-9+\-\s()]{9,15}$/.test(phone)) {
+      res.status(400).json({ success: false, message: 'รูปแบบเบอร์โทรไม่ถูกต้อง' });
+      return;
+    }
+
     const data: any = { email, firstName, lastName, phone, position, type, status, departmentId };
 
     // ถ้าส่ง password มาด้วย ให้ hash ใหม่
@@ -90,35 +124,62 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-// ลบ user
-export const deleteUser = async (req: Request, res: Response) => {
+// เช็ค dependency ก่อน deactivate
+export const getUserDependencies = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
 
-    // ลบข้อมูลที่เกี่ยวข้อง
-    const bookings = await prisma.booking.findMany({
-      where: { userId: id },
-      select: { id: true },
-    });
-    const bookingIds = bookings.map((b) => b.id);
-
-    if (bookingIds.length > 0) {
-      await prisma.bookingEquipment.deleteMany({
-        where: { bookingId: { in: bookingIds } },
-      });
-    }
-    await prisma.booking.deleteMany({ where: { userId: id } });
-    await prisma.booking.updateMany({
-      where: { approverId: id },
-      data: { approverId: null },
-    });
-    await prisma.meetingRoom.updateMany({
+    const managingRooms = await prisma.meetingRoom.findMany({
       where: { managerId: id },
-      data: { managerId: null },
+      select: { id: true, name: true },
     });
 
-    await prisma.user.delete({ where: { id } });
-    res.json({ success: true, message: 'ลบผู้ใช้สำเร็จ' });
+    const activeBookings = await prisma.booking.count({
+      where: { userId: id, status: { in: ['pending', 'approved'] } },
+    });
+
+    res.json({ success: true, data: { managingRooms, activeBookings } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาด' });
+  }
+};
+
+// ปิดการใช้งาน user (deactivate)
+export const deactivateUser = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+
+    const managingRooms = await prisma.meetingRoom.findMany({
+      where: { managerId: id },
+      select: { id: true, name: true },
+    });
+
+    const activeBookings = await prisma.booking.count({
+      where: { userId: id, status: { in: ['pending', 'approved'] } },
+    });
+
+    if (managingRooms.length > 0 || activeBookings > 0) {
+      res.status(400).json({
+        success: false,
+        message: 'ไม่สามารถปิดการใช้งานได้',
+        data: { managingRooms, activeBookings },
+      });
+      return;
+    }
+
+    await prisma.user.update({ where: { id }, data: { status: 'inactive' } });
+    res.json({ success: true, message: 'ปิดการใช้งานผู้ใช้สำเร็จ' });
+  } catch (error) {
+    res.status(400).json({ success: false, message: 'เกิดข้อผิดพลาด' });
+  }
+};
+
+// เปิดการใช้งาน user (activate)
+export const activateUser = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    await prisma.user.update({ where: { id }, data: { status: 'active' } });
+    res.json({ success: true, message: 'เปิดการใช้งานผู้ใช้สำเร็จ' });
   } catch (error) {
     res.status(400).json({ success: false, message: 'เกิดข้อผิดพลาด' });
   }

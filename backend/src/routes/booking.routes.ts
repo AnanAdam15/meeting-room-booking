@@ -37,11 +37,11 @@ router.patch('/:id/cancel', authenticate, bookingController.cancelBooking);
 
 // ดูการจองทั้งหมด
 // GET /api/bookings
-router.get('/', authenticate, authorize('admin', 'room_manager'), bookingController.getAllBookings);
+router.get('/', authenticate, authorize('admin', 'approver'), bookingController.getAllBookings);
 
 // อนุมัติ/ปฏิเสธการจอง
 // PATCH /api/bookings/:id/approve
-router.patch('/:id/approve', authenticate, authorize('admin', 'room_manager'), bookingController.approveBooking);
+router.patch('/:id/approve', authenticate, authorize('admin', 'approver'), bookingController.approveBooking);
 
 // ลบการจอง (admin เท่านั้น)
 // DELETE /api/bookings/:id

@@ -17,8 +17,12 @@ export const getAllEquipments = async (req: Request, res: Response) => {
 export const createEquipment = async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
+    if (!name?.trim()) {
+      res.status(400).json({ success: false, message: 'กรุณากรอกชื่ออุปกรณ์' });
+      return;
+    }
     const equipment = await prisma.equipment.create({
-      data: { name },
+      data: { name: name.trim() },
     });
     res.status(201).json({ success: true, data: equipment });
   } catch (error) {
@@ -30,6 +34,22 @@ export const createEquipment = async (req: Request, res: Response) => {
 export const deleteEquipment = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
+
+    // เช็คว่ามีห้องที่ใช้อุปกรณ์นี้ไหม
+    const roomsUsing = await prisma.roomEquipment.findMany({
+      where: { equipmentId: id },
+      include: { room: { select: { name: true } } },
+    });
+
+    if (roomsUsing.length > 0) {
+      const roomNames = roomsUsing.map((r) => r.room.name).join(', ');
+      res.status(400).json({
+        success: false,
+        message: `ไม่สามารถลบได้ อุปกรณ์นี้ถูกใช้ในห้อง: ${roomNames} กรุณาถอดอุปกรณ์ออกจากห้องก่อน`,
+      });
+      return;
+    }
+
     await prisma.equipment.delete({ where: { id } });
     res.json({ success: true, message: 'ลบอุปกรณ์สำเร็จ' });
   } catch (error) {

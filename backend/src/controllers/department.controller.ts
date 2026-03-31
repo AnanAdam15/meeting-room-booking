@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import prisma from '../config/db';
 
-// ดึงแผนกทั้งหมด
+// ดึงแผนกทั้งหมด (เฉพาะที่ยังใช้งานอยู่)
 export const getAllDepartments = async (req: Request, res: Response) => {
   try {
     const departments = await prisma.department.findMany({
+      where: { isActive: true },
       include: { _count: { select: { users: true } } },
       orderBy: { name: 'asc' },
     });
@@ -18,7 +19,11 @@ export const getAllDepartments = async (req: Request, res: Response) => {
 export const createDepartment = async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
-    const department = await prisma.department.create({ data: { name } });
+    if (!name?.trim()) {
+      res.status(400).json({ success: false, message: 'กรุณากรอกชื่อแผนก' });
+      return;
+    }
+    const department = await prisma.department.create({ data: { name: name.trim() } });
     res.status(201).json({ success: true, data: department });
   } catch (error) {
     res.status(400).json({ success: false, message: 'เกิดข้อผิดพลาด' });
@@ -30,9 +35,13 @@ export const updateDepartment = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     const { name } = req.body;
+    if (!name?.trim()) {
+      res.status(400).json({ success: false, message: 'กรุณากรอกชื่อแผนก' });
+      return;
+    }
     const department = await prisma.department.update({
       where: { id },
-      data: { name },
+      data: { name: name.trim() },
     });
     res.json({ success: true, data: department });
   } catch (error) {
@@ -40,7 +49,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
   }
 };
 
-// ลบแผนก
+// ลบแผนก (soft delete — ข้อมูลยังอยู่ใน Database)
 export const deleteDepartment = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -55,7 +64,7 @@ export const deleteDepartment = async (req: Request, res: Response) => {
       return;
     }
 
-    await prisma.department.delete({ where: { id } });
+    await prisma.department.update({ where: { id }, data: { isActive: false } });
     res.json({ success: true, message: 'ลบแผนกสำเร็จ' });
   } catch (error) {
     res.status(400).json({ success: false, message: 'เกิดข้อผิดพลาด' });
