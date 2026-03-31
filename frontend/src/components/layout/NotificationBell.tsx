@@ -67,7 +67,7 @@ const NotificationBell = () => {
     }
     // นำทางตาม type
     if (notif.type === 'new_booking_pending') {
-      navigate('/admin/bookings');
+      navigate('/admin/bookings?status=pending');
     } else {
       navigate('/my-bookings');
     }

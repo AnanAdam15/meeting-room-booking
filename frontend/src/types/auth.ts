@@ -4,7 +4,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  type: 'admin' | 'staff' | 'room_manager';
+  type: 'admin' | 'staff' | 'approver';
 }
 
 // ข้อมูลที่ส่งไป Login

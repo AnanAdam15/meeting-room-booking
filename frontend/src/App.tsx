@@ -37,7 +37,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// ป้องกันหน้าจัดการห้อง (admin หรือ room_manager)
+// ป้องกันหน้าจัดการห้อง (admin หรือ approver)
 const RoomManagerRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, isRoomManager } = useAuth();
   if (!isAdmin && !isRoomManager) return <Navigate to="/" />;

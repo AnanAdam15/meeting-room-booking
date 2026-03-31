@@ -1,29 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useState, useEffect } from 'react';
 
 const Sidebar = () => {
   const { user, isAdmin, isRoomManager } = useAuth();
-  const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem('theme') === 'dark';
-  });
-
-  // Dark mode toggle
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
-
-  // Mock notification counts — เปลี่ยนเป็นดึงจาก API จริงได้ภายหลัง
-  const [notifications] = useState({
-    myBookings: 0,
-    adminBookings: 3,
-  });
 
   const menuItems = [
     {
@@ -39,14 +18,14 @@ const Sidebar = () => {
       icon: <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
     },
     {
-      path: '/my-bookings', label: 'การจองของฉัน', badge: notifications.myBookings,
+      path: '/my-bookings', label: 'การจองของฉัน', badge: 0,
       icon: <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" /></svg>,
     },
   ];
 
   const adminMenuItems = [
     {
-      path: '/admin/bookings', label: 'จัดการการจอง', badge: notifications.adminBookings,
+      path: '/admin/bookings?status=pending', label: 'จัดการการจอง', badge: 0,
       icon: <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
     },
     {
@@ -69,7 +48,7 @@ const Sidebar = () => {
 
   const managerMenuItems = [
     {
-      path: '/admin/bookings', label: 'จัดการการจอง', badge: notifications.adminBookings,
+      path: '/admin/bookings?status=pending', label: 'จัดการการจอง', badge: 0,
       icon: <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
     },
   ];
@@ -79,7 +58,7 @@ const Sidebar = () => {
 
   const getRoleBadge = () => {
     if (user?.type === 'admin') return { label: 'Admin', color: 'bg-violet-400/20 text-violet-300' };
-    if (user?.type === 'staff') return { label: 'Approver', color: 'bg-amber-400/20 text-amber-300' };
+    if (user?.type === 'approver') return { label: 'Approver', color: 'bg-amber-400/20 text-amber-300' };
     return { label: 'Staff', color: 'bg-slate-400/20 text-slate-300' };
   };
 
@@ -125,7 +104,7 @@ const Sidebar = () => {
 
   return (
     <aside
-      className="w-64 min-h-screen flex flex-col relative overflow-hidden"
+      className="w-64 h-screen sticky top-0 flex flex-col relative overflow-hidden shrink-0"
       style={{
         background: 'linear-gradient(180deg, #0f4f4a 0%, #134e4a 30%, #1a3a4a 70%, #1e293b 100%)',
       }}
@@ -175,29 +154,6 @@ const Sidebar = () => {
           </>
         )}
       </nav>
-
-      {/* Dark Mode Toggle */}
-      <div className="relative z-10 px-4 py-2 border-t border-white/10">
-        <button
-          onClick={() => setIsDark(!isDark)}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition-all"
-        >
-          {isDark ? (
-            <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-            </svg>
-          ) : (
-            <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-            </svg>
-          )}
-          <span className="flex-1 text-left">{isDark ? 'โหมดสว่าง' : 'โหมดมืด'}</span>
-          {/* Toggle switch */}
-          <div className={`w-9 h-5 rounded-full flex items-center transition-all duration-300 ${isDark ? 'bg-cyan-500 justify-end' : 'bg-white/20 justify-start'}`}>
-            <div className={`w-4 h-4 rounded-full mx-0.5 transition-all duration-300 shadow-sm ${isDark ? 'bg-white' : 'bg-white/60'}`} />
-          </div>
-        </button>
-      </div>
 
       {/* User Info */}
       <div className="relative z-10 p-3 border-t border-white/10">

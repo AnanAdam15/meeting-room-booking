@@ -24,7 +24,7 @@ const Navbar = () => {
 
           <div>
             <h2 className="text-sm font-semibold text-slate-700">
-              สวัสดี, {user?.firstName} {user?.lastName}
+               {user?.firstName} {user?.lastName}
             </h2>
             <p className="text-xs text-slate-400">{user?.email}</p>
           </div>

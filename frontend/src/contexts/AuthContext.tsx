@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // เช็คว่าเป็น admin ไหม
   const isAdmin = user?.type === 'admin';
-  const isRoomManager = user?.type === 'room_manager';
+  const isRoomManager = user?.type === 'approver';
 
   return (
     <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAdmin, isRoomManager }}>

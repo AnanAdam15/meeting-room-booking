@@ -53,7 +53,17 @@ export const updateUser = async (id: string, input: UpdateUserInput): Promise<Ap
   return response.data;
 };
 
-export const deleteUser = async (id: string): Promise<ApiResponse> => {
-  const response = await api.delete(`/users/${id}`);
+export const getUserDependencies = async (id: string): Promise<ApiResponse<{ managingRooms: { id: string; name: string }[]; activeBookings: number }>> => {
+  const response = await api.get(`/users/${id}/dependencies`);
+  return response.data;
+};
+
+export const deactivateUser = async (id: string): Promise<ApiResponse> => {
+  const response = await api.patch(`/users/${id}/deactivate`);
+  return response.data;
+};
+
+export const activateUser = async (id: string): Promise<ApiResponse> => {
+  const response = await api.patch(`/users/${id}/activate`);
   return response.data;
 };
