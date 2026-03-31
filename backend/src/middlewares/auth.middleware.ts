@@ -43,6 +43,21 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
+// Middleware ตรวจสอบ Token แบบ Optional (ไม่ error ถ้าไม่มี token)
+export const optionalAuthenticate = (req: Request, _res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const secret = process.env.JWT_SECRET as string;
+      req.user = jwt.verify(token, secret) as JwtPayload;
+    }
+  } catch {
+    // ไม่มี token หรือ token ไม่ถูกต้อง ไม่ต้องทำอะไร
+  }
+  next();
+};
+
 // Middleware ตรวจสอบ Role
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {

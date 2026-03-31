@@ -19,5 +19,5 @@ export interface LoginInput {
 export interface JwtPayload {
   userId: string;
   email: string;
-  type: string; // admin, staff, room_manager
+  type: string; // admin, staff, approver
 }
