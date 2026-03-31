@@ -9,7 +9,7 @@ import { PageTransition, StaggerContainer, StaggerItem } from '../components/ani
 
 
 const DashboardPage = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isRoomManager } = useAuth();
   const navigate = useNavigate();
 
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
@@ -31,7 +31,7 @@ const DashboardPage = () => {
       if (myRes.success && myRes.data) setMyBookings(myRes.data);
       if (roomRes.success && roomRes.data) setRooms(roomRes.data);
 
-      if (isAdmin) {
+      if (isAdmin || isRoomManager) {
         const allRes = await bookingService.getAllBookings();
         if (allRes.success && allRes.data) setAllBookings(allRes.data);
       }
@@ -42,7 +42,7 @@ const DashboardPage = () => {
     }
   };
 
-  const pendingBookings = isAdmin
+  const pendingBookings = (isAdmin || isRoomManager)
     ? allBookings.filter((b) => b.status === 'pending')
     : myBookings.filter((b) => b.status === 'pending');
 
@@ -57,7 +57,6 @@ const DashboardPage = () => {
     .filter((b) => b.status === 'approved' && new Date(b.startDatetime) > new Date())
     .sort((a, b) => new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime())
     .slice(0, 5);
-
 
   const formatTime = (datetime: string) => {
     return new Date(datetime).toLocaleTimeString('th-TH', {
@@ -88,103 +87,122 @@ const DashboardPage = () => {
 
   return (
     <PageTransition>
-    <div>
-      {/* Header */}
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-sm text-teal-600 font-medium mb-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-          แดชบอร์ด
+    <div className="space-y-6">
+
+      {/* Hero Banner */}
+      <div className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-slate-800 rounded-2xl p-6 md:p-8 overflow-hidden">
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/5 rounded-full" />
+        <div className="absolute -bottom-10 left-1/3 w-48 h-48 bg-teal-400/10 rounded-full" />
+        <div className="absolute top-6 right-12 w-2.5 h-2.5 bg-teal-300/40 rounded-full" />
+        <div className="absolute top-14 right-24 w-1.5 h-1.5 bg-white/20 rounded-full" />
+        <div className="absolute bottom-8 right-8 w-2 h-2 bg-cyan-300/30 rounded-full" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-teal-200/80 text-sm font-medium mb-1.5">
+              {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
+              {getGreeting()}  {user?.firstName}
+            </h1>
+            <p className="text-teal-200/60 text-sm">
+              {(isAdmin || isRoomManager)
+                ? `มีคำขอจองรออนุมัติ ${pendingBookings.length} รายการ`
+                : 'ยินดีต้อนรับสู่ระบบจองห้องประชุม'}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/bookings/new')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-teal-700 text-sm font-semibold rounded-xl hover:bg-teal-50 active:scale-95 transition-all shadow-lg shrink-0"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            จองห้องประชุม
+          </button>
         </div>
-        <h1 className="text-2xl font-bold text-slate-800">
-          {getGreeting()}, {user?.firstName} 👋
-        </h1>
-        <p className="text-slate-400 text-sm mt-1">
-          สรุปข้อมูลการจองห้องประชุมของคุณ
-        </p>
       </div>
 
       {/* Summary Cards */}
-      <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
             label: 'ห้องประชุม',
             value: rooms.length,
             sub: `ว่าง ${rooms.filter(r => r.status === 'available').length} ห้อง`,
+            gradient: 'from-teal-500 to-teal-600',
+            shadow: 'shadow-teal-500/30',
             icon: (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             ),
-            color: 'bg-teal-50 text-teal-600 border-teal-100',
-            iconBg: 'bg-teal-100',
             onClick: () => navigate('/rooms'),
           },
           {
             label: 'การจองวันนี้',
             value: todayBookings.length,
-            sub: 'รายการ',
+            sub: 'รายการวันนี้',
+            gradient: 'from-sky-500 to-sky-600',
+            shadow: 'shadow-sky-500/30',
             icon: (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
               </svg>
             ),
-            color: 'bg-sky-50 text-sky-600 border-sky-100',
-            iconBg: 'bg-sky-100',
             onClick: () => navigate('/my-bookings'),
           },
           {
-            label: isAdmin ? 'รออนุมัติ (ทั้งหมด)' : 'รออนุมัติ',
+            label: isAdmin || isRoomManager ? 'รออนุมัติ (ทั้งหมด)' : 'รออนุมัติ',
             value: pendingBookings.length,
             sub: 'รายการ',
+            gradient: 'from-amber-500 to-orange-500',
+            shadow: 'shadow-amber-500/30',
             icon: (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ),
-            color: 'bg-amber-50 text-amber-600 border-amber-100',
-            iconBg: 'bg-amber-100',
-            onClick: () => isAdmin ? navigate('/admin/bookings') : navigate('/my-bookings'),
+            onClick: () => (isAdmin || isRoomManager) ? navigate('/admin/bookings?status=pending') : navigate('/my-bookings'),
           },
           {
             label: 'อนุมัติแล้ว',
             value: approvedBookings.length,
             sub: 'รายการ',
+            gradient: 'from-emerald-500 to-emerald-600',
+            shadow: 'shadow-emerald-500/30',
             icon: (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ),
-            color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-            iconBg: 'bg-emerald-100',
             onClick: () => navigate('/my-bookings'),
           },
         ].map((card) => (
           <StaggerItem key={card.label}>
-          <div
-            onClick={card.onClick}
-            className={`rounded-xl border p-4 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all ${card.color}`}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className={`w-10 h-10 ${card.iconBg} rounded-lg flex items-center justify-center`}>
-                {card.icon}
+            <div
+              onClick={card.onClick}
+              className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-4 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all text-white shadow-lg ${card.shadow}`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  {card.icon}
+                </div>
+                <svg className="w-4 h-4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                </svg>
               </div>
-              <svg className="w-4 h-4 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-              </svg>
+              <p className="text-3xl font-bold tracking-tight">{card.value}</p>
+              <p className="text-sm font-medium text-white/90 mt-0.5">{card.label}</p>
+              <p className="text-xs text-white/60 mt-0.5">{card.sub}</p>
             </div>
-            <p className="text-3xl font-bold">{card.value}</p>
-            <p className="text-xs opacity-70 mt-0.5">{card.label}</p>
-       </div>
           </StaggerItem>
         ))}
       </StaggerContainer>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upcoming Bookings */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
@@ -192,37 +210,40 @@ const DashboardPage = () => {
             </div>
             <button
               onClick={() => navigate('/my-bookings')}
-              className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+              className="text-xs text-teal-600 hover:text-teal-700 font-medium transition"
             >
               ดูทั้งหมด →
             </button>
           </div>
           <div className="p-4">
             {upcomingBookings.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="text-center py-10">
+                <div className="w-14 h-14 bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-7 h-7 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                   </svg>
                 </div>
-                <p className="text-slate-400 text-sm">ไม่มีการจองที่กำลังจะมาถึง</p>
+                <p className="text-slate-600 text-sm font-medium">ไม่มีการจองที่กำลังจะมาถึง</p>
+                <p className="text-slate-400 text-xs mt-1">เริ่มจองห้องประชุมได้เลย</p>
                 <button
                   onClick={() => navigate('/bookings/new')}
-                  className="mt-3 text-xs text-teal-600 hover:text-teal-700 font-medium"
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs text-teal-600 font-semibold bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg transition"
                 >
-                  + จองห้องประชุม
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  จองห้องประชุม
                 </button>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {upcomingBookings.map((booking) => (
                   <div
                     key={booking.id}
                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition group cursor-pointer"
                     onClick={() => navigate('/my-bookings')}
                   >
-                    {/* Date badge */}
-                    <div className="w-12 h-12 bg-teal-50 rounded-xl flex flex-col items-center justify-center shrink-0 border border-teal-100">
+                    <div className="w-12 h-12 bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl flex flex-col items-center justify-center shrink-0 border border-teal-100">
                       <span className="text-[10px] text-teal-500 font-medium leading-none">
                         {new Date(booking.startDatetime).toLocaleDateString('th-TH', { month: 'short' })}
                       </span>
@@ -230,23 +251,15 @@ const DashboardPage = () => {
                         {new Date(booking.startDatetime).getDate()}
                       </span>
                     </div>
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-700 text-sm truncate group-hover:text-teal-700 transition">
                         {booking.title}
                       </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {booking.room?.name}
-                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">{booking.room?.name}</p>
                     </div>
-                    {/* Time */}
                     <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold text-slate-600">
-                        {formatTime(booking.startDatetime)}
-                      </p>
-                      <p className="text-[10px] text-slate-400">
-                        ถึง {formatTime(booking.endDatetime)}
-                      </p>
+                      <p className="text-sm font-semibold text-slate-600">{formatTime(booking.startDatetime)}</p>
+                      <p className="text-[10px] text-slate-400">ถึง {formatTime(booking.endDatetime)}</p>
                     </div>
                   </div>
                 ))}
@@ -256,7 +269,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100">
             <h2 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
               <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -270,65 +283,47 @@ const DashboardPage = () => {
               {
                 label: 'จองห้องประชุม',
                 desc: 'เลือกห้องและเวลาที่ต้องการ',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
-                color: 'text-teal-600 bg-teal-50 hover:bg-teal-100 border-teal-100',
-                iconBg: 'bg-teal-100',
+                gradient: 'from-teal-500 to-teal-600',
+                shadow: 'shadow-teal-500/20',
                 onClick: () => navigate('/bookings/new'),
               },
               {
                 label: 'ดูห้องประชุม',
                 desc: 'ดูรายละเอียดและสถานะห้อง',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                ),
-                color: 'text-sky-600 bg-sky-50 hover:bg-sky-100 border-sky-100',
-                iconBg: 'bg-sky-100',
+                gradient: 'from-sky-500 to-sky-600',
+                shadow: 'shadow-sky-500/20',
                 onClick: () => navigate('/rooms'),
               },
               {
                 label: 'การจองของฉัน',
                 desc: 'ตรวจสอบสถานะการจอง',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
-                  </svg>
-                ),
-                color: 'text-violet-600 bg-violet-50 hover:bg-violet-100 border-violet-100',
-                iconBg: 'bg-violet-100',
+                gradient: 'from-violet-500 to-violet-600',
+                shadow: 'shadow-violet-500/20',
                 onClick: () => navigate('/my-bookings'),
               },
-              ...(isAdmin ? [{
+              ...((isAdmin || isRoomManager) ? [{
                 label: 'อนุมัติการจอง',
                 desc: `มี ${pendingBookings.length} รายการรออนุมัติ`,
-                icon: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
-                color: 'text-amber-600 bg-amber-50 hover:bg-amber-100 border-amber-100',
-                iconBg: 'bg-amber-100',
-                onClick: () => navigate('/admin/bookings'),
+                gradient: 'from-amber-500 to-orange-500',
+                shadow: 'shadow-amber-500/20',
+                onClick: () => navigate('/admin/bookings?status=pending'),
               }] : []),
             ].map((action) => (
               <button
                 key={action.label}
                 onClick={action.onClick}
-                className={`w-full flex items-center gap-3 p-3.5 rounded-xl border transition-all text-left hover:-translate-y-0.5 hover:shadow-sm ${action.color}`}
+                className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-md hover:-translate-y-0.5 transition-all text-left bg-white group"
               >
-                <div className={`w-10 h-10 ${action.iconBg} rounded-lg flex items-center justify-center shrink-0`}>
-                  {action.icon}
+                <div className={`w-10 h-10 bg-gradient-to-br ${action.gradient} rounded-xl flex items-center justify-center shrink-0 shadow-md ${action.shadow}`}>
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{action.label}</p>
-                  <p className="text-xs opacity-60 mt-0.5">{action.desc}</p>
+                  <p className="font-semibold text-slate-700 text-sm group-hover:text-slate-900 transition">{action.label}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{action.desc}</p>
                 </div>
-                <svg className="w-4 h-4 opacity-40 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-slate-300 group-hover:text-slate-400 shrink-0 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
               </button>
@@ -336,7 +331,7 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
-     </div>
+    </div>
     </PageTransition>
   );
 };
