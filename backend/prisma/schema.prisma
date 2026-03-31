@@ -9,8 +9,9 @@ datasource db {
 
 // ตาราง Department (แผนก)
 model Department {
-  id   String @id @default(cuid())
-  name String @db.VarChar(100)
+  id       String  @id @default(cuid())
+  name     String  @db.VarChar(100)
+  isActive Boolean @default(true)
 
   users User[]
 
