@@ -32,8 +32,6 @@ const AdminRoomsPage = () => {
   const [selectedEquipIds, setSelectedEquipIds] = useState<Record<string, number>>({});
   const [newEquipName, setNewEquipName] = useState('');
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingRoom, setDeletingRoom] = useState<Room | null>(null);
   const [showDeleteEquipModal, setShowDeleteEquipModal] = useState(false);
   const [deletingEquipId, setDeletingEquipId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -96,19 +94,6 @@ const AdminRoomsPage = () => {
     } catch (err: any) {
       setFormError(err.response?.data?.message || 'เกิดข้อผิดพลาด');
     } finally { setIsSubmitting(false); }
-  };
-
-  const openDeleteModal = (room: Room) => { setDeletingRoom(room); setShowDeleteModal(true); };
-
-  const handleDelete = async () => {
-    if (!deletingRoom) return;
-    try {
-      await roomService.deleteRoom(deletingRoom.id);
-      setShowDeleteModal(false); setDeletingRoom(null); loadRooms();
-      setNotification({ type: 'success', message: 'ลบห้องประชุมสำเร็จ' });
-    } catch (err: any) {
-      setNotification({ type: 'error', message: err.response?.data?.message || 'เกิดข้อผิดพลาด' });
-    }
   };
 
   const handleUploadClick = (roomId: string) => { setUploadingId(roomId); fileInputRef.current?.click(); };
@@ -175,7 +160,7 @@ const AdminRoomsPage = () => {
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-      available: { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-500', label: 'ว่าง' },
+      available: { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-500', label: 'เปิดใช้งาน' },
       unavailable: { bg: 'bg-red-50', text: 'text-red-600', dot: 'bg-red-500', label: 'ไม่ว่าง' },
       maintenance: { bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500', label: 'ปิดปรับปรุง' },
     };
@@ -190,7 +175,7 @@ const AdminRoomsPage = () => {
 
   const getImageUrl = (imagePath: string | null) => {
     if (!imagePath) return null;
-    return `http://localhost:5000${imagePath}`;
+    return imagePath;
   };
 
   const inputClass = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder:text-slate-300 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all text-sm";
@@ -308,8 +293,7 @@ const AdminRoomsPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-slate-600 mb-1.5">สถานะ</label>
                   <select value={status} onChange={(e) => setStatus(e.target.value)} className={`${inputClass} appearance-none`}>
-                    <option value="available">ว่าง</option>
-                    <option value="unavailable">ไม่ว่าง</option>
+                    <option value="available">เปิดใช้งาน</option>
                     <option value="maintenance">ปิดปรับปรุง</option>
                   </select>
                 </div>
@@ -385,24 +369,6 @@ const AdminRoomsPage = () => {
             <div className="flex gap-3">
               <button onClick={saveRoomEquipments} className="flex-1 bg-teal-600 text-white py-2.5 rounded-xl font-semibold hover:bg-teal-700 transition text-sm shadow-lg shadow-teal-600/20">บันทึกอุปกรณ์</button>
               <button onClick={() => { setShowEquipmentModal(false); setSelectedRoomForEquip(null); }} className="px-6 py-2.5 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition text-sm font-medium">ยกเลิก</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Room Modal */}
-      {showDeleteModal && deletingRoom && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-xl">
-            <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
-            </div>
-            <h2 className="text-lg font-bold text-slate-800 mb-2">ลบห้องประชุม</h2>
-            <p className="text-slate-400 text-sm mb-1">ต้องการลบห้อง</p>
-            <p className="text-slate-700 font-semibold text-sm mb-5">"{deletingRoom.name}"</p>
-            <div className="flex gap-3">
-              <button onClick={handleDelete} className="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-semibold hover:bg-red-700 transition text-sm">ยืนยันลบ</button>
-              <button onClick={() => { setShowDeleteModal(false); setDeletingRoom(null); }} className="px-6 py-2.5 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition text-sm font-medium">ยกเลิก</button>
             </div>
           </div>
         </div>
@@ -490,7 +456,6 @@ const AdminRoomsPage = () => {
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.58-3.32a.5.5 0 010-.86l5.58-3.32a.5.5 0 01.75.43v6.64a.5.5 0 01-.75.43z" /></svg>
                     อุปกรณ์
                   </button>
-                  <button onClick={() => openDeleteModal(room)} className="flex-1 px-3 py-2 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-100 transition font-medium">ลบ</button>
                 </div>
               </div>
          </div>

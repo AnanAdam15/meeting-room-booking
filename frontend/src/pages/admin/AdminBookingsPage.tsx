@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { Booking } from '../../types/booking';
 import * as bookingService from '../../services/bookingService';
 import api from '../../services/api';
 import { PageTransition, StaggerContainer, StaggerItem } from '../../components/animations';
 
 const AdminBookingsPage = () => {
+  const [searchParams] = useSearchParams();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<string>('all');
+  const [filter, setFilter] = useState<string>(searchParams.get('status') || 'all');
 
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectingBookingId, setRejectingBookingId] = useState<string | null>(null);
@@ -56,6 +58,7 @@ const AdminBookingsPage = () => {
       setShowApproveModal(false);
       setApprovingBookingId(null);
       setNotification({ type: 'success', message: 'อนุมัติการจองสำเร็จ' });
+      setFilter('approved');
       loadBookings();
     } catch (err: any) {
       setNotification({ type: 'error', message: err.response?.data?.message || 'เกิดข้อผิดพลาด' });
@@ -82,6 +85,7 @@ const AdminBookingsPage = () => {
       setShowRejectModal(false);
       setRejectingBookingId(null);
       setNotification({ type: 'success', message: 'ปฏิเสธการจองสำเร็จ' });
+      setFilter('rejected');
       loadBookings();
     } catch (err: any) {
       setNotification({ type: 'error', message: err.response?.data?.message || 'เกิดข้อผิดพลาด' });
@@ -331,17 +335,6 @@ return (
                               ปฏิเสธ
                             </button>
                           </>
-                        )}
-                        {booking.status === 'approved' && (
-                          <button
-                            onClick={() => handleTestReminder(booking.id)}
-                            className="px-3 py-1.5 text-xs bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 border border-amber-100 transition font-medium flex items-center gap-1"
-                          >
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                            </svg>
-                            ทดสอบเตือน
-                          </button>
                         )}
                         <button
                           onClick={() => openDeleteModal(booking.id)}

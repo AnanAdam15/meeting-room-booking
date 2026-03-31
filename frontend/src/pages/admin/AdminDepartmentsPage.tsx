@@ -13,6 +13,8 @@ const AdminDepartmentsPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingDept, setDeletingDept] = useState<Department | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => { loadDepartments(); }, []);
 
@@ -51,18 +53,23 @@ const AdminDepartmentsPage = () => {
 
   const openDeleteModal = (dept: Department) => {
     setDeletingDept(dept);
+    setDeleteError('');
     setShowDeleteModal(true);
   };
 
   const handleDelete = async () => {
     if (!deletingDept) return;
+    setIsDeleting(true);
     try {
       await departmentService.deleteDepartment(deletingDept.id);
       setShowDeleteModal(false);
       setDeletingDept(null);
+      setDeleteError('');
       loadDepartments();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+      setDeleteError(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -177,23 +184,40 @@ const AdminDepartmentsPage = () => {
       {/* Delete Modal */}
       {showDeleteModal && deletingDept && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-xl">
-            <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-800">ลบแผนก</h2>
+                <p className="text-xs text-slate-400">"{deletingDept.name}"</p>
+              </div>
             </div>
-            <h2 className="text-lg font-bold text-slate-800 mb-2">ลบแผนก</h2>
-            <p className="text-slate-400 text-sm mb-1">ต้องการลบแผนก</p>
-            <p className="text-slate-700 font-semibold text-sm mb-5">"{deletingDept.name}"</p>
-            <div className="flex gap-3">
-              <button onClick={handleDelete} className="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-semibold hover:bg-red-700 transition text-sm">
-                ยืนยันลบ
-              </button>
-              <button onClick={() => { setShowDeleteModal(false); setDeletingDept(null); }} className="px-6 py-2.5 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition text-sm font-medium">
-                ยกเลิก
-              </button>
-            </div>
+
+            {deleteError ? (
+              <>
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3.5 mb-4 flex items-start gap-2.5">
+                  <svg className="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-sm text-red-700">{deleteError}</p>
+                </div>
+                <button onClick={() => { setShowDeleteModal(false); setDeletingDept(null); setDeleteError(''); }} className="w-full py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition text-sm font-medium">ปิด</button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-slate-500 mb-5">แผนกจะถูกปิดใช้งานและซ่อนจากระบบ ข้อมูลยังคงอยู่ใน Database แผนกที่มีสมาชิกอยู่จะไม่สามารถลบได้</p>
+                <div className="flex gap-3">
+                  <button onClick={handleDelete} disabled={isDeleting} className="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-semibold hover:bg-red-700 transition text-sm disabled:opacity-50">
+                    {isDeleting ? 'กำลังลบ...' : 'ยืนยันลบ'}
+                  </button>
+                  <button onClick={() => { setShowDeleteModal(false); setDeletingDept(null); }} className="px-6 py-2.5 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition text-sm font-medium">ยกเลิก</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
