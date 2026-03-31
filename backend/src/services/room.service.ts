@@ -17,14 +17,19 @@ export const createRoom = async (input: CreateRoomInput) => {
   return room;
 };
 
-// ดึงห้องทั้งหมด
-export const getAllRooms = async () => {
+// ดึงห้องทั้งหมด (includeAll: admin/approver เห็นทุกห้อง, user ทั่วไปไม่เห็นห้อง maintenance)
+export const getAllRooms = async (includeAll = false) => {
   const rooms = await prisma.meetingRoom.findMany({
+    where: includeAll ? undefined : { status: { not: 'maintenance' } },
     include: {
       manager: {
         select: { id: true, firstName: true, lastName: true },
       },
     },
+    orderBy: [
+      { status: 'asc' },    // available < maintenance (a < m)
+      { capacity: 'asc' },  // เล็ก → ใหญ่
+    ],
   });
   return rooms;
 };

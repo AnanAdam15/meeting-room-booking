@@ -84,9 +84,7 @@ export const sendBookingRejected = async (
             <tr><td style="padding: 8px; color: #6b7280;">ห้องประชุม:</td><td style="padding: 8px;">${roomName}</td></tr>
             <tr><td style="padding: 8px; color: #6b7280;">วันที่:</td><td style="padding: 8px;">${formatDate(startDatetime)}</td></tr>
             <tr><td style="padding: 8px; color: #6b7280;">เวลา:</td><td style="padding: 8px;">${formatTime(startDatetime)} - ${formatTime(endDatetime)}</td></tr>
-            <tr><td style="padding: 8px; color: #6b7280;">เวลา:</td><td style="padding: 8px;">${formatTime(startDatetime)} - ${formatTime(endDatetime)}</td></tr>
             ${reason ? `<tr><td style="padding: 8px; color: #6b7280;">เหตุผล:</td><td style="padding: 8px; font-weight: bold; color: #EF4444;">${reason}</td></tr>` : ''}
-          </table>
           </table>
           <p>กรุณาติดต่อผู้ดูแลระบบหากต้องการข้อมูลเพิ่มเติม</p>
           <p style="color: #6b7280; font-size: 14px;">ระบบจองห้องประชุม โรงพยาบาล</p>

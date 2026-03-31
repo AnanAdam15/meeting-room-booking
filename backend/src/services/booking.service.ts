@@ -33,8 +33,22 @@ export const checkRoomAvailability = async (
 
 // สร้างการจองใหม่
 export const createBooking = async (userId: string, input: CreateBookingInput) => {
+  if (!input.title || !input.roomId || !input.startDatetime || !input.endDatetime) {
+    throw new Error('กรุณากรอกข้อมูลให้ครบ (หัวข้อ, ห้อง, วันเวลาเริ่ม-สิ้นสุด)');
+  }
+
   const startDatetime = new Date(input.startDatetime);
   const endDatetime = new Date(input.endDatetime);
+
+  if (isNaN(startDatetime.getTime()) || isNaN(endDatetime.getTime())) {
+    throw new Error('รูปแบบวันที่ไม่ถูกต้อง');
+  }
+  if (startDatetime >= endDatetime) {
+    throw new Error('เวลาเริ่มต้นต้องน้อยกว่าเวลาสิ้นสุด');
+  }
+  if (startDatetime < new Date()) {
+    throw new Error('ไม่สามารถจองเวลาที่ผ่านมาแล้วได้');
+  }
 
   const isAvailable = await checkRoomAvailability(
     input.roomId,
@@ -87,16 +101,18 @@ export const createBooking = async (userId: string, input: CreateBookingInput) =
       select: { firstName: true, lastName: true },
     });
 
-    for (const admin of admins) {
-       emailService.sendNewBookingNotification(
-        admin.email,
-        `${booker?.firstName} ${booker?.lastName}`,
-        input.title,
-        booking.room.name,
-        startDatetime,
-        endDatetime
-      );
-    }
+    await Promise.allSettled(
+      admins.map((admin) =>
+        emailService.sendNewBookingNotification(
+          admin.email,
+          `${booker?.firstName} ${booker?.lastName}`,
+          input.title,
+          booking.room.name,
+          startDatetime,
+          endDatetime
+        )
+      )
+    );
   } catch (emailError) {
     console.error('ส่งอีเมลแจ้งเตือนไม่สำเร็จ:', emailError);
   }
@@ -333,52 +349,29 @@ export const approveBooking = async (
       },
     },
   });
- // ส่งอีเมลแจ้ง user
-  try {
-    if (input.status === 'approved') {
-      await emailService.sendBookingApproved(
+  // ส่งอีเมล + แจ้งเตือนแบบ fire & forget (ไม่ block response)
+  const emailPromise = input.status === 'approved'
+    ? emailService.sendBookingApproved(
         booking.user.email,
         `${booking.user.firstName} ${booking.user.lastName}`,
-        booking.title,
-        booking.room.name,
-        booking.startDatetime,
-        booking.endDatetime
-      );
-    } else if (input.status === 'rejected') {
-      await emailService.sendBookingRejected(
+        booking.title, booking.room.name,
+        booking.startDatetime, booking.endDatetime
+      )
+    : emailService.sendBookingRejected(
         booking.user.email,
         `${booking.user.firstName} ${booking.user.lastName}`,
-        booking.title,
-        booking.room.name,
-        booking.startDatetime,
-        booking.endDatetime,
-        input.reason  // เพิ่มตรงนี้
-      );
-    }
-  } catch (emailError) {
-    console.error('ส่งอีเมลแจ้งเตือนไม่สำเร็จ:', emailError);
-  }
-  // แจ้งเตือนในระบบ
-  try {
-    if (input.status === 'approved') {
-      await notificationService.notifyBookingApproved(
-        booking.id,
-        booking.title,
-        booking.room.name,
-        booking.user.id
-      );
-    } else if (input.status === 'rejected') {
-      await notificationService.notifyBookingRejected(
-        booking.id,
-        booking.title,
-        booking.room.name,
-        booking.user.id,
+        booking.title, booking.room.name,
+        booking.startDatetime, booking.endDatetime,
         input.reason
       );
-    }
-  } catch (notifError) {
-    console.error('สร้างแจ้งเตือนไม่สำเร็จ:', notifError);
-  }
+
+  const notifPromise = input.status === 'approved'
+    ? notificationService.notifyBookingApproved(booking.id, booking.title, booking.room.name, booking.user.id)
+    : notificationService.notifyBookingRejected(booking.id, booking.title, booking.room.name, booking.user.id, input.reason);
+
+  Promise.allSettled([emailPromise, notifPromise]).catch((e) =>
+    console.error('แจ้งเตือนไม่สำเร็จ:', e)
+  );
 
   return booking;
   

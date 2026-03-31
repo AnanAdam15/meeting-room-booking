@@ -58,7 +58,7 @@ export const notifyNewBooking = async (bookingId: string, bookingTitle: string, 
   // หา admin + approver ทั้งหมด
   const adminsAndApprovers = await prisma.user.findMany({
     where: {
-      type: { in: ['admin', 'approver'] },
+      type: { in: ['admin', 'approver', 'approver'] },
       status: 'active',
     },
     select: { id: true },
