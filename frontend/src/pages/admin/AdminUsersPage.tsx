@@ -77,7 +77,7 @@ const AdminUsersPage = () => {
     try {
       if (editingUser) {
         await userService.updateUser(editingUser.id, {
-          email, firstName, lastName, phone: phone || undefined, position: position || undefined,
+          email, firstName, lastName, phone: phone || null, position: position || null,
           type, status, departmentId, password: password || undefined,
         });
       } else {
@@ -123,7 +123,7 @@ const AdminUsersPage = () => {
     const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
       admin: { bg: 'bg-violet-50', text: 'text-violet-600', dot: 'bg-violet-500', label: 'ผู้ดูแลระบบ' },
       approver: { bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500', label: 'ผู้อนุมัติ' },
-      staff: { bg: 'bg-slate-50', text: 'text-slate-500', dot: 'bg-slate-400', label: 'พนักงาน' },
+      staff: { bg: 'bg-slate-50', text: 'text-slate-500', dot: 'bg-slate-400', label: 'สมาชิก' },
     };
     const c = config[t] || { bg: 'bg-slate-50', text: 'text-slate-500', dot: 'bg-slate-400', label: t };
     return (
@@ -279,7 +279,7 @@ return (
                 <div>
                   <label className="block text-sm font-medium text-slate-600 mb-1.5">บทบาท <span className="text-red-400">*</span></label>
                   <select value={type} onChange={(e) => setType(e.target.value)} className={`${inputClass} appearance-none`}>
-                    <option value="staff">พนักงาน</option>
+                    <option value="staff">สมาชิก</option>
                     <option value="approver">ผู้อนุมัติ</option>
                     <option value="admin">ผู้ดูแลระบบ</option>
                   </select>

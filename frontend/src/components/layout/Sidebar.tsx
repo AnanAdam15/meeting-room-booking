@@ -59,7 +59,7 @@ const Sidebar = () => {
   const getRoleBadge = () => {
     if (user?.type === 'admin') return { label: 'Admin', color: 'bg-violet-400/20 text-violet-300' };
     if (user?.type === 'approver') return { label: 'Approver', color: 'bg-amber-400/20 text-amber-300' };
-    return { label: 'Staff', color: 'bg-slate-400/20 text-slate-300' };
+    return { label: 'Member', color: 'bg-slate-400/20 text-slate-300' };
   };
 
   const role = getRoleBadge();
