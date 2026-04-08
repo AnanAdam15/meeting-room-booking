@@ -45,7 +45,9 @@ const RoomsPage = () => {
         const num = parseInt(searchTerm);
         return !isNaN(num) && room.capacity >= num;
       case 'equipment':
-        return room.description?.toLowerCase().includes(term);
+        return room.equipments?.some((e) =>
+          e.equipment.name.toLowerCase().includes(term)
+        );
       default:
         return true;
     }

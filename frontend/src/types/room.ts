@@ -13,6 +13,12 @@ export interface Room {
     firstName: string;
     lastName: string;
   } | null;
+  equipments: {
+    equipment: {
+      id: string;
+      name: string;
+    };
+  }[];
   createdAt: string;
   updatedAt: string;
 }
