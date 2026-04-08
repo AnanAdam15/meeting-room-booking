@@ -12,6 +12,16 @@ const MyBookingsPage = () => {
   const [filter, setFilter] = useState<string>('all');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editStartHour, setEditStartHour] = useState('09');
+  const [editEndHour, setEditEndHour] = useState('10');
+  const [editError, setEditError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [historyBooking, setHistoryBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     loadBookings();
@@ -33,6 +43,58 @@ const MyBookingsPage = () => {
   const openCancelModal = (id: string) => {
     setCancellingId(id);
     setShowCancelModal(true);
+  };
+
+  const openEditModal = (booking: Booking) => {
+    const start = new Date(booking.startDatetime);
+    const end = new Date(booking.endDatetime);
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+    const dateStr = start.toLocaleDateString('sv-SE');
+    const now = new Date();
+    const isToday = dateStr === todayStr;
+    let startHour = start.getHours();
+    let endHour = end.getHours();
+    if (isToday && startHour <= now.getHours()) {
+      startHour = now.getHours() + 1;
+      if (endHour <= startHour) endHour = startHour + 1;
+      if (startHour > 18) startHour = 18;
+      if (endHour > 18) endHour = 18;
+    }
+    setEditingBooking(booking);
+    setEditTitle(booking.title);
+    setEditDescription(booking.description || '');
+    setEditDate(dateStr);
+    setEditStartHour(String(startHour).padStart(2, '0'));
+    setEditEndHour(String(endHour).padStart(2, '0'));
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingBooking) return;
+    if (!editTitle.trim()) { setEditError('กรุณากรอกชื่อการจอง'); return; }
+    if (editStartHour >= editEndHour) { setEditError('เวลาสิ้นสุดต้องหลังเวลาเริ่มต้น'); return; }
+    setIsSaving(true);
+    setEditError('');
+    try {
+      const startDatetime = `${editDate}T${editStartHour}:00:00`;
+      const endDatetime = `${editDate}T${editEndHour}:00:00`;
+      const res = await bookingService.updateBooking(editingBooking.id, {
+        title: editTitle,
+        description: editDescription || undefined,
+        startDatetime,
+        endDatetime,
+      });
+      if (res.success) {
+        setShowEditModal(false);
+        setEditingBooking(null);
+        loadBookings();
+      }
+    } catch (err: any) {
+      setEditError(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = async () => {
@@ -77,6 +139,65 @@ const MyBookingsPage = () => {
         {c.label}
       </span>
     );
+  };
+
+  const getHistoryEvents = (b: Booking) => {
+    const events: { label: string; by: string; time: string; color: string; icon: string }[] = [];
+    events.push({
+      label: 'สร้างการจอง',
+      by: b.user ? `${b.user.firstName} ${b.user.lastName}` : 'ผู้จอง',
+      time: b.createdAt,
+      color: 'text-teal-600 bg-teal-50 border-teal-200',
+      icon: '📋',
+    });
+    const createdMs = new Date(b.createdAt).getTime();
+    const updatedMs = new Date(b.updatedAt).getTime();
+    const approvedMs = b.approvedAt ? new Date(b.approvedAt).getTime() : null;
+    const wasEdited = updatedMs - createdMs > 60000 && (!approvedMs || updatedMs < approvedMs - 5000);
+    if (wasEdited) {
+      events.push({
+        label: 'แก้ไขการจอง',
+        by: b.user ? `${b.user.firstName} ${b.user.lastName}` : 'ผู้จอง',
+        time: b.updatedAt,
+        color: 'text-blue-600 bg-blue-50 border-blue-200',
+        icon: '✏️',
+      });
+    }
+    if (b.status === 'approved' && b.approvedAt) {
+      events.push({
+        label: 'อนุมัติการจอง',
+        by: b.approver ? `${b.approver.firstName} ${b.approver.lastName}` : 'ผู้ดูแล',
+        time: b.approvedAt,
+        color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        icon: '✅',
+      });
+    }
+    if (b.status === 'rejected' && b.approvedAt) {
+      events.push({
+        label: 'ปฏิเสธการจอง',
+        by: b.approver ? `${b.approver.firstName} ${b.approver.lastName}` : 'ผู้ดูแล',
+        time: b.approvedAt,
+        color: 'text-red-600 bg-red-50 border-red-200',
+        icon: '❌',
+      });
+    }
+    if (b.status === 'cancelled') {
+      events.push({
+        label: 'ยกเลิกการจอง',
+        by: b.user ? `${b.user.firstName} ${b.user.lastName}` : 'ผู้จอง',
+        time: b.updatedAt,
+        color: 'text-slate-600 bg-slate-50 border-slate-200',
+        icon: '🚫',
+      });
+    }
+    return events;
+  };
+
+  const formatDateTime = (datetime: string) => {
+    return new Date(datetime).toLocaleString('th-TH', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
   };
 
   const formatDate = (datetime: string) => {
@@ -209,7 +330,7 @@ const MyBookingsPage = () => {
           )}
         </div>
       ) : (
-        <StaggerContainer className="space-y-3">
+        <StaggerContainer key={filter} className="space-y-3">
           {filteredBookings.map((booking) => {
             const sc = statusConfig[booking.status] || statusConfig['cancelled'];
             return (
@@ -234,14 +355,30 @@ const MyBookingsPage = () => {
                             <h3 className="font-semibold text-slate-800 text-sm truncate">{booking.title}</h3>
                             {getStatusBadge(booking.status)}
                           </div>
-                          {booking.status === 'pending' && (
+                          <div className="flex gap-2 shrink-0">
                             <button
-                              onClick={() => openCancelModal(booking.id)}
-                              className="px-3 py-1.5 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 border border-red-100 transition font-medium shrink-0"
+                              onClick={() => setHistoryBooking(booking)}
+                              className="px-3 py-1.5 text-xs text-slate-500 bg-slate-50 rounded-lg hover:bg-slate-100 border border-slate-200 transition font-medium"
                             >
-                              ยกเลิก
+                              ประวัติ
                             </button>
-                          )}
+                            {booking.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => openEditModal(booking)}
+                                  className="px-3 py-1.5 text-xs text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100 border border-teal-100 transition font-medium"
+                                >
+                                  แก้ไข
+                                </button>
+                                <button
+                                  onClick={() => openCancelModal(booking.id)}
+                                  className="px-3 py-1.5 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 border border-red-100 transition font-medium"
+                                >
+                                  ยกเลิก
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
 
                         <div className="space-y-1.5 text-xs text-slate-500">
@@ -290,6 +427,137 @@ const MyBookingsPage = () => {
             );
           })}
         </StaggerContainer>
+      )}
+
+      {/* History Modal */}
+      {historyBooking && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">ประวัติการจอง</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{historyBooking.title}</p>
+              </div>
+              <button onClick={() => setHistoryBooking(null)} className="text-slate-400 hover:text-slate-600 transition">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="relative">
+              <div className="absolute left-4 top-0 bottom-0 w-px bg-slate-200" />
+              <div className="space-y-5">
+                {getHistoryEvents(historyBooking).map((event, i) => (
+                  <div key={i} className="relative flex gap-4 pl-10">
+                    <div className={`absolute left-0 w-8 h-8 rounded-full border flex items-center justify-center text-sm shrink-0 ${event.color}`}>
+                      {event.icon}
+                    </div>
+                    <div className="flex-1 pb-1">
+                      <p className="text-sm font-semibold text-slate-700">{event.label}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">โดย {event.by}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{formatDateTime(event.time)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button
+              onClick={() => setHistoryBooking(null)}
+              className="w-full mt-6 py-2.5 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition text-sm font-medium"
+            >
+              ปิด
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingBooking && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-slate-800 mb-4">แก้ไขการจอง</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">ชื่อการจอง *</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">รายละเอียด</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">วันที่</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">เวลาเริ่มต้น</label>
+                  <select
+                    value={editStartHour}
+                    onChange={(e) => {
+                      const newStart = e.target.value;
+                      setEditStartHour(newStart);
+                      if (editEndHour <= newStart) {
+                        setEditEndHour(String(parseInt(newStart) + 1).padStart(2, '0'));
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  >
+                    {Array.from({ length: 10 }, (_, i) => String(i + 9).padStart(2, '0')).map((h) => {
+                      const isToday = editDate === new Date().toLocaleDateString('sv-SE');
+                      const nowHour = new Date().getHours();
+                      const disabled = isToday && parseInt(h) <= nowHour;
+                      return <option key={h} value={h} disabled={disabled}>{h}:00</option>;
+                    })}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">เวลาสิ้นสุด</label>
+                  <select
+                    value={editEndHour}
+                    onChange={(e) => setEditEndHour(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  >
+                    {Array.from({ length: 10 }, (_, i) => String(i + 9).padStart(2, '0')).map((h) => (
+                      <option key={h} value={h} disabled={h <= editStartHour}>{h}:00</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {editError && <p className="text-red-500 text-xs">{editError}</p>}
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={handleEditSubmit}
+                disabled={isSaving}
+                className="flex-1 bg-teal-600 text-white py-2.5 rounded-xl font-semibold hover:bg-teal-700 transition text-sm disabled:opacity-50"
+              >
+                {isSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+              </button>
+              <button
+                onClick={() => { setShowEditModal(false); setEditingBooking(null); }}
+                className="px-6 py-2.5 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition text-sm font-medium"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Cancel Modal */}
