@@ -25,6 +25,9 @@ export const getAllRooms = async (includeAll = false) => {
       manager: {
         select: { id: true, firstName: true, lastName: true },
       },
+      equipments: {
+        include: { equipment: true },
+      },
     },
     orderBy: [
       { status: 'asc' },    // available < maintenance (a < m)

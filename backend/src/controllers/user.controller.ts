@@ -102,7 +102,11 @@ export const updateUser = async (req: Request, res: Response) => {
       return;
     }
 
-    const data: any = { email, firstName, lastName, phone, position, type, status, departmentId };
+    const data: any = {
+      email, firstName, lastName, type, status, departmentId,
+      phone: phone ?? null,
+      position: position ?? null,
+    };
 
     // ถ้าส่ง password มาด้วย ให้ hash ใหม่
     if (password) {

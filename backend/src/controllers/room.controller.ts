@@ -5,6 +5,14 @@ import prisma from '../config/db';
 // สร้างห้องใหม่
 export const createRoom = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { name } = req.body;
+    if (name) {
+      const existing = await prisma.meetingRoom.findFirst({ where: { name: { equals: name, mode: 'insensitive' } } });
+      if (existing) {
+        res.status(400).json({ success: false, message: 'ชื่อห้องประชุมนี้มีอยู่ในระบบแล้ว' });
+        return;
+      }
+    }
     const room = await roomService.createRoom(req.body);
     res.status(201).json({
       success: true,
@@ -64,6 +72,16 @@ export const getRoomById = async (req: Request, res: Response): Promise<void> =>
 export const updateRoom = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
+    const { name } = req.body;
+    if (name) {
+      const existing = await prisma.meetingRoom.findFirst({
+        where: { name: { equals: name, mode: 'insensitive' }, id: { not: id } },
+      });
+      if (existing) {
+        res.status(400).json({ success: false, message: 'ชื่อห้องประชุมนี้มีอยู่ในระบบแล้ว' });
+        return;
+      }
+    }
     const room = await roomService.updateRoom(id, req.body);
     res.status(200).json({
       success: true,
@@ -95,7 +113,7 @@ export const deleteRoom = async (req: Request, res: Response): Promise<void> => 
   }
 };
 // ดึง user ที่เป็น approver หรือ admin
-export const getRoomManagers = async (req: Request, res: Response): Promise<void> => {
+export const getRoomManagers = async (_req: Request, res: Response): Promise<void> => {
   try {
     const managers = await prisma.user.findMany({
       where: {
