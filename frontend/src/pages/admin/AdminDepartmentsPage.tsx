@@ -18,6 +18,7 @@ const AdminDepartmentsPage = () => {
 
   useEffect(() => { loadDepartments(); }, []);
 
+  // โหลดแผนกทั้งหมด (เฉพาะที่ isActive = true)
   const loadDepartments = async () => {
     try {
       const res = await departmentService.getAllDepartments();
@@ -29,10 +30,21 @@ const AdminDepartmentsPage = () => {
     }
   };
 
+  // เปิดฟอร์มเพิ่ม / แก้ไขแผนก
   const openAdd = () => { setEditingDept(null); setName(''); setFormError(''); setShowForm(true); };
   const openEdit = (dept: Department) => { setEditingDept(dept); setName(dept.name); setFormError(''); setShowForm(true); };
   const closeForm = () => { setShowForm(false); setEditingDept(null); setFormError(''); };
 
+  // handleSubmit
+  //   (สร้าง) → departmentService.createDepartment(name)
+  //     → POST /api/departments [backend: department.controller.ts]
+  //       → เช็คชื่อซ้ำ (findFirst, case-insensitive)
+  //       → prisma.department.create({ isActive: true })
+  //   (แก้ไข) → departmentService.updateDepartment(id, name)
+  //     → PUT /api/departments/:id [backend: department.controller.ts]
+  //       → เช็คชื่อซ้ำ (ข้ามตัวเอง)
+  //       → prisma.department.update()
+  // ← closeForm() + loadDepartments()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setFormError('กรุณากรอกชื่อแผนก'); return; }
@@ -51,12 +63,18 @@ const AdminDepartmentsPage = () => {
     }
   };
 
+  // เปิด modal ยืนยันลบ (soft delete — ตั้ง isActive = false ใน backend)
   const openDeleteModal = (dept: Department) => {
     setDeletingDept(dept);
     setDeleteError('');
     setShowDeleteModal(true);
   };
 
+  // handleDelete → departmentService.deleteDepartment(id)
+  //   → DELETE /api/departments/:id [backend: department.controller.ts]
+  //     → เช็ค user ในแผนก ถ้ามี → return 400
+  //     → prisma.department.update({ isActive: false }) ← soft delete
+  // ← loadDepartments()
   const handleDelete = async () => {
     if (!deletingDept) return;
     setIsDeleting(true);

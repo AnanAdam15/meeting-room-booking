@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"console.log\\(require\\(''./node_modules/react-to-print/package.json''\\).version\\)\")",
+      "Bash(npx tsc:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(find /d/meeting-room-booking/frontend/src/pages -name *.tsx -type f)",
+      "Bash(grep -n \"localhost:5000\" /d/meeting-room-booking/frontend/src/pages/*.tsx)",
+      "Bash(grep -n \"localhost:5000\" /d/meeting-room-booking/frontend/src/pages/admin/*.tsx)",
+      "Bash(npx ts-node:*)",
+      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); rooms=data.get\\(''''data'''',[]\\); [print\\(f{r[''''capacity'''']:>4} คน - {r[''''name'''']}\\) for r in rooms[:8]]\")"
+    ]
+  }
+}

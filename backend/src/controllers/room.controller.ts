@@ -2,7 +2,9 @@ import { Request, Response } from 'express';
 import * as roomService from '../services/room.service';
 import prisma from '../config/db';
 
-// สร้างห้องใหม่
+// createRoom → เช็คชื่อซ้ำ: prisma.meetingRoom.findFirst({ name case-insensitive })
+//   → roomService.createRoom(body) [services/room.service.ts]
+//     → prisma.meetingRoom.create()
 export const createRoom = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name } = req.body;
@@ -27,7 +29,11 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-// ดึงห้องทั้งหมด
+// getAllRooms → เช็ค isAdminOrManager จาก req.user.type
+//   → roomService.getAllRooms(isAdminOrManager) [services/room.service.ts]
+//     → admin/approver: ดึงทุกห้องรวม maintenance
+//     → user ทั่วไป: ดึงเฉพาะ status='available'
+//   → include equipments (สำหรับ equipment search)
 export const getAllRooms = async (req: Request, res: Response): Promise<void> => {
   try {
     const isAdminOrManager = !!(req.user && ['admin', 'approver'].includes(req.user.type));

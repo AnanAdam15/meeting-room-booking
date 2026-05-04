@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FadeIn } from '../components/animations';
 
 
@@ -14,6 +14,15 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // handleSubmit → login() [AuthContext.tsx]
+  //   → authService.login() [services/authService.ts]
+  //     → POST /api/auth/login [backend: auth.controller.ts]
+  //       → bcrypt.compare(password, hash)
+  //       → jwt.sign({ userId, type, email })
+  //       ← return { token, user }
+  //   → localStorage.setItem('token', token)
+  //   → setUser(user) [global state]
+  // ← navigate('/') ไปหน้า Dashboard
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -29,6 +38,8 @@ const LoginPage = () => {
     }
   };
 
+  // fillTestAccount → setEmail() + setPassword()
+  // ← form จะถูกเติมอัตโนมัติ, กด submit เองได้เลย (เฉพาะ DEV mode)
   const fillTestAccount = (testEmail: string) => {
     setEmail(testEmail);
     setPassword('password123');
@@ -209,6 +220,14 @@ const LoginPage = () => {
               )}
             </button>
           </form>
+
+          {/* Register link */}
+          <p className="text-center text-sm text-slate-400 mt-6">
+            ยังไม่มีบัญชี?{' '}
+            <Link to="/register" className="text-teal-600 font-medium hover:underline">
+              สมัครสมาชิก
+            </Link>
+          </p>
 
           {/* Test Accounts — แสดงเฉพาะ development mode */}
           {import.meta.env.DEV && <div className="mt-8 pt-6 border-t border-slate-200">

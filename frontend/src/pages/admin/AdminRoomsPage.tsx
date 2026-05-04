@@ -45,6 +45,7 @@ const AdminRoomsPage = () => {
     }
   }, [notification]);
 
+  // โหลดรายการห้องทั้งหมด (admin เห็นห้อง maintenance ด้วย)
   const loadRooms = async () => {
     try {
       const response = await roomService.getAllRooms();
@@ -53,6 +54,7 @@ const AdminRoomsPage = () => {
     finally { setIsLoading(false); }
   };
 
+  // โหลดรายการอุปกรณ์ทั้งหมดในระบบ
   const loadAllEquipments = async () => {
     try {
       const response = await equipmentService.getAllEquipments();
@@ -60,6 +62,7 @@ const AdminRoomsPage = () => {
     } catch (error) { console.error('โหลดอุปกรณ์ไม่สำเร็จ:', error); }
   };
 
+  // โหลดรายชื่อผู้ดูแลห้อง (role approver)
   const loadManagers = async () => {
     try {
       const response = await roomService.getRoomManagers();
@@ -67,15 +70,18 @@ const AdminRoomsPage = () => {
     } catch (error) { console.error('โหลดผู้ดูแลไม่สำเร็จ:', error); }
   };
 
+  // เปิดฟอร์มเพิ่มห้องใหม่ (reset state ทั้งหมด)
   const openAddForm = () => {
     setEditingRoom(null); setName(''); setLocation(''); setCapacity(10); setDescription(''); setStatus('available'); setManagerId(''); setFormError(''); setShowForm(true);
   };
 
+  // เปิดฟอร์มแก้ไข — เติมข้อมูลเดิมของห้องลงในฟอร์ม
   const openEditForm = (room: Room) => {
     setEditingRoom(room); setName(room.name); setLocation(room.location); setCapacity(room.capacity);
     setDescription(room.description || ''); setStatus(room.status); setManagerId(room.managerId || ''); setFormError(''); setShowForm(true);
   };
 
+  // ปิดฟอร์มและล้าง error
   const closeForm = () => { setShowForm(false); setEditingRoom(null); setFormError(''); };
 
   const handleSubmit = async (e: React.FormEvent) => {

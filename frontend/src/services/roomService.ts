@@ -27,10 +27,10 @@ export const updateRoom = async (id: string, input: UpdateRoomInput): Promise<Ap
 };
 
 // ลบห้อง (admin)
-export const deleteRoom = async (id: string): Promise<ApiResponse> => {
-  const response = await api.delete(`/rooms/${id}`);
-  return response.data;
-};
+// export const deleteRoom = async (id: string): Promise<ApiResponse> => {
+//   const response = await api.delete(`/rooms/${id}`);
+//   return response.data;
+// };
 
 // อัพโหลดรูปห้อง
 export const uploadRoomImage = async (id: string, file: File): Promise<ApiResponse<Room>> => {

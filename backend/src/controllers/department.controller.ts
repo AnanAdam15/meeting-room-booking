@@ -23,6 +23,13 @@ export const createDepartment = async (req: Request, res: Response) => {
       res.status(400).json({ success: false, message: 'กรุณากรอกชื่อแผนก' });
       return;
     }
+    const existing = await prisma.department.findFirst({
+      where: { name: { equals: name.trim(), mode: 'insensitive' }, isActive: true },
+    });
+    if (existing) {
+      res.status(400).json({ success: false, message: 'ชื่อแผนกนี้มีอยู่ในระบบแล้ว' });
+      return;
+    }
     const department = await prisma.department.create({ data: { name: name.trim() } });
     res.status(201).json({ success: true, data: department });
   } catch (error) {
@@ -37,6 +44,13 @@ export const updateDepartment = async (req: Request, res: Response) => {
     const { name } = req.body;
     if (!name?.trim()) {
       res.status(400).json({ success: false, message: 'กรุณากรอกชื่อแผนก' });
+      return;
+    }
+    const existing = await prisma.department.findFirst({
+      where: { name: { equals: name.trim(), mode: 'insensitive' }, isActive: true, id: { not: id } },
+    });
+    if (existing) {
+      res.status(400).json({ success: false, message: 'ชื่อแผนกนี้มีอยู่ในระบบแล้ว' });
       return;
     }
     const department = await prisma.department.update({

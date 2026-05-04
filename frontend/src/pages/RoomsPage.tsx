@@ -15,6 +15,7 @@ const RoomsPage = () => {
     loadRooms();
   }, []);
 
+  // โหลดห้องทั้งหมด (ไม่รวม maintenance สำหรับ user ทั่วไป)
   const loadRooms = async () => {
     try {
       const response = await roomService.getAllRooms();
@@ -28,11 +29,13 @@ const RoomsPage = () => {
     }
   };
 
+  // เรียงห้อง: available ก่อน maintenance แล้วเรียงตามความจุน้อย→มาก
   const sortedRooms = [...rooms].sort((a, b) => {
     if (a.status !== b.status) return a.status === 'available' ? -1 : 1;
     return a.capacity - b.capacity;
   });
 
+  // กรองห้องตาม searchBy (ชื่อ / สถานที่ / ความจุ / อุปกรณ์)
   const filteredRooms = sortedRooms.filter((room) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
@@ -45,6 +48,7 @@ const RoomsPage = () => {
         const num = parseInt(searchTerm);
         return !isNaN(num) && room.capacity >= num;
       case 'equipment':
+        // ค้นหาจากชื่ออุปกรณ์จริงใน roomEquipments (ต้องการ include ใน getAllRooms backend)
         return room.equipments?.some((e) =>
           e.equipment.name.toLowerCase().includes(term)
         );

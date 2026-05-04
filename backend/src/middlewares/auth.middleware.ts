@@ -11,7 +11,11 @@ declare global {
   }
 }
 
-// Middleware ตรวจสอบ Token
+// authenticate → ดึง Authorization: Bearer <token> จาก header
+//   → jwt.verify(token, JWT_SECRET) decode payload
+//   → req.user = { userId, email, type }
+//   → next() ← ส่งต่อไป controller
+//   หรือ return 401 ถ้าไม่มี / token ผิด / หมดอายุ
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   try {
     // 1. ดึง token จาก header
@@ -58,7 +62,10 @@ export const optionalAuthenticate = (req: Request, _res: Response, next: NextFun
   next();
 };
 
-// Middleware ตรวจสอบ Role
+// authorize(...roles) → เช็ค req.user.type อยู่ใน roles ที่อนุญาตไหม
+//   → ถ้าใช่ → next()
+//   → ถ้าไม่ใช่ → return 403 Forbidden
+// ใช้งาน: router.get('/path', authenticate, authorize('admin','approver'), controller)
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {

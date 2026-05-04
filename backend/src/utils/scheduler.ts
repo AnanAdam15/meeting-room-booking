@@ -1,7 +1,12 @@
 import prisma from '../config/db';
 import * as emailService from '../services/email.service';
 
-// ตรวจสอบทุก 5 นาที ว่ามีการประชุมที่จะเริ่มในอีก 1 ชั่วโมงหรือไม่
+// startReminderScheduler → เรียกจาก index.ts ตอน server start
+//   setInterval (ทุก 5 นาที):
+//     → prisma.booking.findMany({ status: 'approved', startDatetime: [55-60 นาทีข้างหน้า] })
+//     → สำหรับแต่ละ booking ที่เจอ:
+//       → emailService.sendMeetingReminder(user.email, title, room, startDatetime)
+//         → Nodemailer ส่งอีเมลเตือน
 export const startReminderScheduler = () => {
   console.log('⏰ เริ่ม Reminder Scheduler');
 

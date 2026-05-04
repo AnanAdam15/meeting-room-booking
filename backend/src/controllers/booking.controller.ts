@@ -2,7 +2,13 @@ import { Request, Response } from 'express';
 import * as bookingService from '../services/booking.service';
 import '../middlewares/auth.middleware';
 
-// สร้างการจองใหม่
+// createBooking → bookingService.createBooking(userId, body) [services/booking.service.ts]
+//   → validate (title, roomId, startDatetime, endDatetime, ไม่ย้อนหลัง)
+//   → checkRoomAvailability() → prisma.booking.findFirst({ overlap })
+//   → prisma.booking.create() + prisma.bookingEquipment.createMany()
+//   → emailService.sendNewBookingNotification() → Nodemailer ส่งอีเมล admin
+//   → notificationService.notifyNewBooking() → prisma.notification.createMany(admins)
+// ← return booking data
 export const createBooking = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -23,7 +29,9 @@ export const createBooking = async (req: Request, res: Response) => {
   }
 };
 
-// ดึงการจองทั้งหมด (admin)
+// getAllBookings → bookingService.getAllBookings()
+//   → prisma.booking.findMany() include user, room, approver, equipments
+//   (route ถูก protect ด้วย authenticate + authorize('admin','approver'))
 export const getAllBookings = async (req: Request, res: Response) => {
   try {
     const bookings = await bookingService.getAllBookings();
@@ -65,7 +73,8 @@ export const getBookingById = async (req: Request, res: Response) => {
   }
 };
 
-// ดึงการจองของ user ที่ login อยู่
+// getMyBookings → bookingService.getBookingsByUserId(req.user.userId)
+//   → prisma.booking.findMany({ where: { userId } }) เรียงจากใหม่→เก่า
 export const getMyBookings = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -101,7 +110,12 @@ export const getBookingsByRoom = async (req: Request, res: Response) => {
   }
 };
 
-// อัพเดทการจอง
+// updateBooking → bookingService.updateBooking(id, userId, body)
+//   → เช็คว่า booking มีอยู่จริง
+//   → เช็คว่า userId ตรงกับเจ้าของ
+//   → เช็ค status === 'pending' (ห้ามแก้ approved/rejected)
+//   → ถ้าเปลี่ยนเวลา → checkRoomAvailability() (exclude ตัวเอง)
+//   → prisma.booking.update()
 export const updateBooking = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -123,7 +137,9 @@ export const updateBooking = async (req: Request, res: Response) => {
   }
 };
 
-// ยกเลิกการจอง (โดย user เจ้าของ)
+// cancelBooking → bookingService.cancelBooking(id, userId)
+//   → เช็ค booking มีอยู่ + เจ้าของตรง + ยังไม่ cancelled
+//   → prisma.booking.update({ status: 'cancelled' })
 export const cancelBooking = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -145,7 +161,12 @@ export const cancelBooking = async (req: Request, res: Response) => {
   }
 };
 
-// อนุมัติ/ปฏิเสธการจอง (admin/manager)
+// approveBooking → bookingService.approveBooking(id, approverId, body)
+//   → เช็ค booking มีอยู่ + status === 'pending'
+//   → prisma.booking.update({ status, approverId, approvedAt })
+//   → (approved) emailService.sendBookingApproved() + notificationService.notifyBookingApproved()
+//   → (rejected) emailService.sendBookingRejected(reason) + notificationService.notifyBookingRejected()
+//   (email/notification เป็น fire & forget ไม่ block response)
 export const approveBooking = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -168,7 +189,9 @@ export const approveBooking = async (req: Request, res: Response) => {
   }
 };
 
-// ลบการจอง (admin)
+// deleteBooking → bookingService.deleteBooking(id)
+//   → เช็ค booking มีอยู่
+//   → prisma.booking.delete() (ลบถาวร ไม่ใช่ soft delete)
 export const deleteBooking = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;

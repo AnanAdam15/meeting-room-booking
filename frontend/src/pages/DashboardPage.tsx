@@ -21,6 +21,12 @@ const DashboardPage = () => {
     loadData();
   }, []);
 
+  // loadData → bookingService.getMyBookings() [services/bookingService.ts]
+  //           → GET /api/bookings/my [backend: booking.controller.ts → booking.service.ts]
+  //          → roomService.getAllRooms() [services/roomService.ts]
+  //           → GET /api/rooms [backend: room.controller.ts → room.service.ts]
+  //          (ถ้า admin/manager) → bookingService.getAllBookings()
+  //           → GET /api/bookings [backend: booking.controller.ts]
   const loadData = async () => {
     try {
       const [myRes, roomRes] = await Promise.all([
@@ -42,28 +48,34 @@ const DashboardPage = () => {
     }
   };
 
+  // admin/manager เห็นจำนวน pending ทั้งระบบ, user ทั่วไปเห็นเฉพาะของตัวเอง
   const pendingBookings = (isAdmin || isRoomManager)
     ? allBookings.filter((b) => b.status === 'pending')
     : myBookings.filter((b) => b.status === 'pending');
 
+  // การจองที่ถูกอนุมัติแล้ว (ของตัวเอง)
   const approvedBookings = myBookings.filter((b) => b.status === 'approved');
 
+  // การจองวันนี้ (ไม่รวม cancelled)
   const todayBookings = myBookings.filter((b) => {
     const today = new Date().toDateString();
     return new Date(b.startDatetime).toDateString() === today && b.status !== 'cancelled';
   });
 
+  // การจองที่กำลังจะมาถึง (approved, อนาคต) เรียงตามเวลา แสดงสูงสุด 5 รายการ
   const upcomingBookings = myBookings
     .filter((b) => b.status === 'approved' && new Date(b.startDatetime) > new Date())
     .sort((a, b) => new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime())
     .slice(0, 5);
 
+  // แปลง datetime เป็นเวลา HH:MM (ภาษาไทย)
   const formatTime = (datetime: string) => {
     return new Date(datetime).toLocaleTimeString('th-TH', {
       hour: '2-digit', minute: '2-digit',
     });
   };
 
+  // คำทักทายตามช่วงเวลา
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'สวัสดีตอนเช้า';

@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import App from './App';
 import './index.css';
 
+// จุดเริ่มต้นของแอป — ครอบด้วย BrowserRouter (routing) และ AuthProvider (global auth state)
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>

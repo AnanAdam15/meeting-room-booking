@@ -20,7 +20,6 @@ const AdminUsersPage = () => {
   const [isCheckingDeps, setIsCheckingDeps] = useState(false);
 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -32,6 +31,7 @@ const AdminUsersPage = () => {
 
   useEffect(() => { loadUsers(); loadDepartments(); }, []);
 
+  // โหลดผู้ใช้ทั้งหมดในระบบ
   const loadUsers = async () => {
     try {
       const res = await userService.getAllUsers();
@@ -40,6 +40,7 @@ const AdminUsersPage = () => {
     finally { setIsLoading(false); }
   };
 
+  // โหลดแผนกทั้งหมด (ใช้ใน dropdown เลือกแผนกของฟอร์ม)
   const loadDepartments = async () => {
     try {
       const res = await departmentService.getAllDepartments();
@@ -47,50 +48,49 @@ const AdminUsersPage = () => {
     } catch (err) { console.error('โหลดแผนกไม่สำเร็จ:', err); }
   };
 
+  // ล้าง state ฟอร์มทั้งหมดกลับค่าเริ่มต้น
   const resetForm = () => {
-    setEmail(''); setPassword(''); setFirstName(''); setLastName('');
+    setEmail(''); setFirstName(''); setLastName('');
     setPhone(''); setPosition(''); setType('staff'); setStatus('active'); setDepartmentId(''); setFormError('');
   };
 
-  const openAdd = () => { setEditingUser(null); resetForm(); setShowForm(true); };
-
+  // เปิดฟอร์มแก้ไข — เติมข้อมูลเดิมของผู้ใช้
   const openEdit = (user: UserData) => {
     setEditingUser(user);
     setEmail(user.email); setFirstName(user.firstName); setLastName(user.lastName);
     setPhone(user.phone || ''); setPosition(user.position || '');
     setType(user.type); setStatus(user.status); setDepartmentId(user.departmentId);
-    setPassword(''); setFormError('');
+    setFormError('');
     setShowForm(true);
   };
 
+  // ปิดฟอร์มและ reset ค่า
   const closeForm = () => { setShowForm(false); setEditingUser(null); resetForm(); };
 
+  // handleSubmit → validate (email format, phone format)
+  //   → userService.updateUser(id, data)
+  //     → PUT /api/users/:id [backend: user.controller.ts]
+  //       → prisma.user.update({ phone: null, position: null }) ← null ล้างค่าเดิม
+  // ← closeForm() + loadUsers()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editingUser) return;
     if (!email || !firstName || !lastName || !departmentId) { setFormError('กรุณากรอกข้อมูลที่จำเป็นให้ครบ'); return; }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) { setFormError('รูปแบบอีเมลไม่ถูกต้อง'); return; }
-    if (!editingUser && (!password || password.length < 6)) { setFormError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
-    if (editingUser && password && password.length < 6) { setFormError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
     if (phone && !/^[0-9+\-\s()]{9,15}$/.test(phone)) { setFormError('รูปแบบเบอร์โทรไม่ถูกต้อง (ตัวเลข 9-15 หลัก)'); return; }
     setIsSubmitting(true);
     try {
-      if (editingUser) {
-        await userService.updateUser(editingUser.id, {
-          email, firstName, lastName, phone: phone || null, position: position || null,
-          type, status, departmentId, password: password || undefined,
-        });
-      } else {
-        await userService.createUser({
-          email, password, firstName, lastName, phone: phone || undefined,
-          position: position || undefined, type, departmentId,
-        });
-      }
+      await userService.updateUser(editingUser.id, {
+        email, firstName, lastName, phone: phone || null, position: position || null,
+        type, status, departmentId,
+      });
       closeForm(); loadUsers();
     } catch (err: any) { setFormError(err.response?.data?.message || 'เกิดข้อผิดพลาด'); }
     finally { setIsSubmitting(false); }
   };
 
+  // เปิด modal เปลี่ยนสถานะ — ถ้าจะปิดใช้งาน ให้เช็ค dependencies ก่อน (ห้องที่ดูแล, การจองค้าง)
   const openStatusModal = async (user: UserData) => {
     setStatusTargetUser(user);
     setStatusDeps(null);
@@ -189,12 +189,6 @@ return (
           <h1 className="text-2xl font-bold text-slate-800">ผู้ใช้ทั้งหมด</h1>
           <p className="text-slate-400 text-sm mt-1">{users.length} คน</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-xl hover:bg-teal-700 transition shadow-lg shadow-teal-600/20">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-          </svg>
-          เพิ่มผู้ใช้
-        </button>
       </div>
 
       {/* Search */}
@@ -215,16 +209,12 @@ return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center gap-3 mb-5">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${editingUser ? 'bg-amber-50' : 'bg-teal-50'}`}>
-                {editingUser ? (
-                  <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
-                ) : (
-                  <svg className="w-5 h-5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>
-                )}
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-50">
+                <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-800">{editingUser ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้ใหม่'}</h2>
-                <p className="text-xs text-slate-400">{editingUser ? 'แก้ไขข้อมูลผู้ใช้' : 'กรอกข้อมูลผู้ใช้ใหม่'}</p>
+                <h2 className="text-lg font-bold text-slate-800">แก้ไขผู้ใช้</h2>
+                <p className="text-xs text-slate-400">แก้ไขข้อมูลผู้ใช้</p>
               </div>
             </div>
 
@@ -249,12 +239,6 @@ return (
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">อีเมล <span className="text-red-400">*</span></label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  รหัสผ่าน {editingUser ? <span className="text-slate-400 font-normal">(เว้นว่างถ้าไม่เปลี่ยน)</span> : <span className="text-red-400">*</span>}
-                </label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required={!editingUser} className={inputClass} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -288,10 +272,10 @@ return (
               {editingUser && (
                 <div>
                   <label className="block text-sm font-medium text-slate-600 mb-1.5">สถานะ</label>
-                  <select value={status} onChange={(e) => setStatus(e.target.value)} className={`${inputClass} appearance-none`}>
-                    <option value="active">ใช้งาน</option>
-                    <option value="inactive">ระงับ</option>
-                  </select>
+                  <div className={`${inputClass} bg-slate-50 text-slate-500 cursor-not-allowed flex items-center`}>
+                    {status === 'active' ? '● ใช้งาน' : '● ระงับ'}
+                    <span className="ml-2 text-xs text-slate-400">(เปลี่ยนได้ผ่านปุ่มเปิด/ปิดการใช้งาน)</span>
+                  </div>
                 </div>
               )}
               <div className="flex gap-3 pt-3">

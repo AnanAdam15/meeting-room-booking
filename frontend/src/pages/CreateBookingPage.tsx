@@ -66,6 +66,7 @@ const CreateBookingPage = () => {
     }
   }, [roomId]);
 
+  // โหลดอุปกรณ์ที่มีในห้องที่เลือก (แสดง checkbox ให้ user เลือก)
   const loadRoomEquipments = async (id: string) => {
     try {
       const response = await equipmentService.getRoomEquipments(id);
@@ -77,6 +78,7 @@ const CreateBookingPage = () => {
     }
   };
 
+  // toggle เลือก/ยกเลิกอุปกรณ์ที่ต้องการใช้
   const toggleEquipment = (equipmentId: string) => {
     setSelectedEquipments((prev) => {
       const newSelected = { ...prev };
@@ -89,8 +91,13 @@ const CreateBookingPage = () => {
     });
   };
 
+  // ข้อมูลห้องที่ถูกเลือก (ใช้แสดงรายละเอียดห้อง)
   const selectedRoom = rooms.find((r) => r.id === roomId);
 
+  // checkTimeSlots → bookingService.getRoomBookingsByDate(roomId, date)
+  //   → GET /api/bookings/room/:roomId?date=YYYY-MM-DD [backend: booking.controller.ts]
+  //     → prisma.booking.findMany({ where: { roomId, date, status: approved } })
+  // ← setRoomBookings() + setShowTimeSlots(true) → แสดง time grid
   const checkTimeSlots = async () => {
     if (!roomId || !date) {
       setError('กรุณาเลือกห้องและวันที่ก่อน');
@@ -110,6 +117,9 @@ const CreateBookingPage = () => {
     }
   };
 
+  // getSlotStatus(slotStart, slotEnd) → ตรวจ overlap กับ roomBookings[]
+  //   ← return booking ที่ชน หรือ undefined (ถ้าว่าง)
+  //   ใช้ใน time grid เพื่อแสดงสีแดง/เขียว
   const getSlotStatus = (slotStart: string, slotEnd: string) => {
     const slotS = new Date(`${date}T${slotStart}:00`);
     const slotE = new Date(`${date}T${slotEnd}:00`);
@@ -137,6 +147,15 @@ const CreateBookingPage = () => {
     });
   };
 
+  // handleSubmit → validate (เวลา 09-18, ไม่ย้อนหลัง, endTime > startTime)
+  //   → bookingService.createBooking(data) [services/bookingService.ts]
+  //     → POST /api/bookings [backend: booking.controller.ts]
+  //       → ตรวจ time overlap กับ booking อื่นในห้องเดียวกัน
+  //       → prisma.booking.create({ status: 'pending' })
+  //       → prisma.bookingEquipment.createMany(equipments)
+  //       → createNotification(adminId, 'new_booking_pending')
+  //       → sendEmail(admin, 'มีคำขอจองใหม่') [Nodemailer]
+  // ← navigate('/my-bookings') หลัง 2 วินาที
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

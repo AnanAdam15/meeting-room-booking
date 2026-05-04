@@ -18,6 +18,11 @@ const ReportPage = () => {
     loadReport(firstDay, lastDay);
   }, []);
 
+  // loadReport → reportService.getRoomUsageReport(start, end) [services/reportService.ts]
+  //   → GET /api/reports/rooms?startDate=&endDate= [backend: report.controller.ts]
+  //     → prisma.booking.groupBy({ roomId }) นับ booking ต่อห้อง
+  //     → เรียงจากมากไปน้อย
+  // ← setReport(data) → แสดง bar chart + summary cards
   const loadReport = async (start?: string, end?: string) => {
     setIsLoading(true);
     try {
@@ -30,14 +35,18 @@ const ReportPage = () => {
     }
   };
 
+  // กดค้นหา → โหลดรายงานใหม่ตามช่วงวันที่ที่เลือก
   const handleSearch = () => loadReport(startDate, endDate);
 
+  // พิมพ์รายงาน (ใช้ print CSS ซ่อน element ที่ไม่ต้องการ)
   const handlePrint = () => window.print();
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 
+  // ห้องที่ถูกจองมากที่สุด (roomStats เรียงจาก backend แล้ว)
   const mostUsedRoom = report?.roomStats?.[0];
+  // ใช้สำหรับคำนวณ % ความกว้าง bar chart
   const maxBookings = report?.roomStats?.length
     ? Math.max(...report.roomStats.map((r) => r.totalBookings))
     : 1;

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Booking } from '../../types/booking';
 import * as bookingService from '../../services/bookingService';
-import api from '../../services/api';
 import { PageTransition, StaggerContainer, StaggerItem } from '../../components/animations';
 
 const AdminBookingsPage = () => {
@@ -33,6 +32,10 @@ const AdminBookingsPage = () => {
     }
   }, [notification]);
 
+  // loadBookings → bookingService.getAllBookings() [services/bookingService.ts]
+  //   → GET /api/bookings [backend: booking.controller.ts]
+  //     → middleware checkRole('admin','approver')
+  //     → prisma.booking.findMany() (ทุก user)
   const loadBookings = async () => {
     try {
       const response = await bookingService.getAllBookings();
@@ -46,11 +49,18 @@ const AdminBookingsPage = () => {
     }
   };
 
+  // เปิด modal ยืนยันการอนุมัติ
   const openApproveModal = (id: string) => {
     setApprovingBookingId(id);
     setShowApproveModal(true);
   };
 
+  // handleApprove → bookingService.approveBooking(id, { status:'approved' })
+  //   → PATCH /api/bookings/:id/status [backend: booking.controller.ts]
+  //     → prisma.booking.update({ status: 'approved' })
+  //     → createNotification(userId, 'booking_approved')
+  //     → sendEmail(user.email, 'อนุมัติแล้ว') [Nodemailer]
+  // ← setFilter('approved') + loadBookings()
   const handleApprove = async () => {
     if (!approvingBookingId) return;
     try {
@@ -65,12 +75,19 @@ const AdminBookingsPage = () => {
     }
   };
 
+  // เปิด modal ปฏิเสธ พร้อม reset เหตุผล
   const openRejectModal = (bookingId: string) => {
     setRejectingBookingId(bookingId);
     setRejectReason('');
     setShowRejectModal(true);
   };
 
+  // handleReject → bookingService.approveBooking(id, { status:'rejected', reason })
+  //   → PATCH /api/bookings/:id/status [backend: booking.controller.ts]
+  //     → prisma.booking.update({ status: 'rejected', reason })
+  //     → createNotification(userId, 'booking_rejected')
+  //     → sendEmail(user.email, reason) [Nodemailer]
+  // ← setFilter('rejected') + loadBookings()
   const handleReject = async () => {
     if (!rejectingBookingId) return;
     if (!rejectReason.trim()) {
@@ -92,22 +109,13 @@ const AdminBookingsPage = () => {
     }
   };
 
-  const handleTestReminder = async (bookingId: string) => {
-    try {
-      const response = await api.post('/bookings/test-reminder', { bookingId });
-      if (response.data.success) {
-        setNotification({ type: 'success', message: response.data.message });
-      }
-    } catch (err: any) {
-      setNotification({ type: 'error', message: err.response?.data?.message || 'ส่งอีเมลเตือนไม่สำเร็จ' });
-    }
-  };
-
+  // เปิด modal ยืนยันลบ
   const openDeleteModal = (id: string) => {
     setDeletingBookingId(id);
     setShowDeleteModal(true);
   };
 
+  // ลบการจองถาวร (admin เท่านั้น)
   const handleDelete = async () => {
     if (!deletingBookingId) return;
     try {
@@ -121,6 +129,7 @@ const AdminBookingsPage = () => {
     }
   };
 
+  // สีและ label ของแต่ละสถานะการจอง
   const getStatusConfig = (status: string) => {
     const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
       pending: { bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500', label: 'รออนุมัติ' },

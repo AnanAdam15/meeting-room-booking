@@ -7,7 +7,14 @@ import {
   ApproveBookingInput,
 } from '../types/booking.types';
 
-// ตรวจสอบว่าห้องว่างในช่วงเวลาที่ต้องการจองหรือไม่
+// checkRoomAvailability(roomId, start, end, excludeBookingId?)
+//   → prisma.booking.findFirst({
+//       roomId,
+//       status: NOT cancelled/rejected,
+//       startDatetime < end AND endDatetime > start  ← overlap condition
+//     })
+//   ← return true (ว่าง) / false (มีการจองชนกัน)
+//   excludeBookingId ใช้ตอน update เพื่อไม่ให้ชนกับตัวเอง
 export const checkRoomAvailability = async (
   roomId: string,
   startDatetime: Date,
@@ -31,7 +38,12 @@ export const checkRoomAvailability = async (
   return !conflictingBooking;
 };
 
-// สร้างการจองใหม่
+// createBooking(userId, input)
+//   1. validate ข้อมูล + เช็คเวลาไม่ย้อนหลัง
+//   2. checkRoomAvailability() ← ถ้าไม่ว่าง throw error
+//   3. prisma.booking.create() + prisma.bookingEquipment.createMany()
+//   4. (fire & forget) emailService.sendNewBookingNotification() → แจ้ง admin ทุกคน
+//   5. (fire & forget) notificationService.notifyNewBooking() → สร้าง notification ให้ admin
 export const createBooking = async (userId: string, input: CreateBookingInput) => {
   if (!input.title || !input.roomId || !input.startDatetime || !input.endDatetime) {
     throw new Error('กรุณากรอกข้อมูลให้ครบ (หัวข้อ, ห้อง, วันเวลาเริ่ม-สิ้นสุด)');
@@ -148,7 +160,7 @@ export const getAllBookings = async () => {
         include: { equipment: true },
      },
     },
-    orderBy: { startDatetime: 'asc' },
+    orderBy: { createdAt: 'desc' },
   });
   return bookings;
 };
@@ -190,7 +202,7 @@ export const getBookingsByUserId = async (userId: string) => {
       include: { equipment: true },
       },
     },
-    orderBy: { startDatetime: 'desc' },
+    orderBy: { createdAt: 'desc' },
   });
   return bookings;
 };
@@ -221,7 +233,12 @@ export const getBookingsByRoomId = async (roomId: string, date?: string) => {
   return bookings;
 };
 
-// อัพเดทการจอง
+// updateBooking(id, userId, input)
+//   1. prisma.booking.findUnique(id) เช็คมีอยู่
+//   2. เช็ค userId === booking.userId (เจ้าของเท่านั้น)
+//   3. เช็ค status === 'pending' (ห้ามแก้ approved/rejected)
+//   4. ถ้าเปลี่ยนเวลา → checkRoomAvailability(excludeBookingId=id)
+//   5. prisma.booking.update()
 export const updateBooking = async (
   id: string,
   userId: string,
@@ -312,7 +329,12 @@ export const cancelBooking = async (id: string, userId: string) => {
   return booking;
 };
 
-// อนุมัติ/ปฏิเสธการจอง (โดย admin หรือ manager)
+// approveBooking(id, approverId, input)
+//   1. เช็ค booking มีอยู่ + status === 'pending'
+//   2. prisma.booking.update({ status, approverId, approvedAt: now })
+//   3. (approved) emailService.sendBookingApproved() + notificationService.notifyBookingApproved()
+//      (rejected) emailService.sendBookingRejected(reason) + notificationService.notifyBookingRejected()
+//   Promise.allSettled ← ไม่ให้ email/notification failure block response
 export const approveBooking = async (
   id: string,
   approverId: string,

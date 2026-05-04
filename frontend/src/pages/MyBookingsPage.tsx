@@ -27,6 +27,9 @@ const MyBookingsPage = () => {
     loadBookings();
   }, []);
 
+  // loadBookings → bookingService.getMyBookings() [services/bookingService.ts]
+  //   → GET /api/bookings/my [backend: booking.controller.ts]
+  //     → prisma.booking.findMany({ where: { userId } })
   const loadBookings = async () => {
     try {
       const response = await bookingService.getMyBookings();
@@ -40,11 +43,15 @@ const MyBookingsPage = () => {
     }
   };
 
+  // openCancelModal → setShowCancelModal(true) → แสดง modal ยืนยัน
+  // ← user กด "ยืนยัน" → handleCancel()
   const openCancelModal = (id: string) => {
     setCancellingId(id);
     setShowCancelModal(true);
   };
 
+  // เปิด modal แก้ไข — ถ้าวันนี้และเวลาผ่านไปแล้ว ให้ auto-advance ไปชั่วโมงถัดไป
+  // ใช้ toLocaleDateString('sv-SE') เพื่อได้รูปแบบ YYYY-MM-DD โดยไม่ต้อง adjust timezone
   const openEditModal = (booking: Booking) => {
     const start = new Date(booking.startDatetime);
     const end = new Date(booking.endDatetime);
@@ -70,6 +77,11 @@ const MyBookingsPage = () => {
     setShowEditModal(true);
   };
 
+  // handleEditSubmit → bookingService.updateBooking(id, data) [services/bookingService.ts]
+  //   → PUT /api/bookings/:id [backend: booking.controller.ts]
+  //     → ตรวจ time overlap กับการจองอื่น
+  //     → prisma.booking.update(...)
+  // ← loadBookings() โหลดข้อมูลใหม่
   const handleEditSubmit = async () => {
     if (!editingBooking) return;
     if (!editTitle.trim()) { setEditError('กรุณากรอกชื่อการจอง'); return; }
@@ -97,6 +109,10 @@ const MyBookingsPage = () => {
     }
   };
 
+  // handleCancel → bookingService.cancelBooking(id) [services/bookingService.ts]
+  //   → PATCH /api/bookings/:id/cancel [backend: booking.controller.ts]
+  //     → prisma.booking.update({ status: 'cancelled' })
+  // ← loadBookings() โหลดข้อมูลใหม่
   const handleCancel = async () => {
     if (!cancellingId) return;
     try {

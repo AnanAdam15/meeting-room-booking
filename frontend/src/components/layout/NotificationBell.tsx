@@ -30,6 +30,10 @@ const NotificationBell = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // loadUnreadCount → notificationService.getUnreadCount() [services/notificationService.ts]
+  //   → GET /api/notifications/unread-count [backend: notification.controller.ts]
+  //     → prisma.notification.count({ where: { userId, isRead: false } })
+  // ← setUnreadCount(n) → แสดง badge บน bell icon
   const loadUnreadCount = async () => {
     try {
       const res = await notificationService.getUnreadCount();
@@ -39,6 +43,10 @@ const NotificationBell = () => {
     }
   };
 
+  // loadNotifications → notificationService.getMyNotifications()
+  //   → GET /api/notifications [backend: notification.controller.ts]
+  //     → prisma.notification.findMany({ userId, orderBy: createdAt desc })
+  // ← setNotifications(data) → แสดงใน dropdown
   const loadNotifications = async () => {
     setIsLoading(true);
     try {
@@ -56,6 +64,10 @@ const NotificationBell = () => {
     setIsOpen(!isOpen);
   };
 
+  // handleRead → notificationService.markAsRead(id)
+  //   → PATCH /api/notifications/:id/read [backend]
+  //     → prisma.notification.update({ isRead: true })
+  // ← navigate ตาม type: new_booking_pending → /admin/bookings, อื่นๆ → /my-bookings
   const handleRead = async (notif: Notification) => {
     if (!notif.isRead) {
      await notificationService.markAsRead(notif.id);

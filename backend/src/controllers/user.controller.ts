@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import prisma from '../config/db';
-import bcrypt from 'bcryptjs';
 
-// ดึง user ทั้งหมด
+// getAllUsers → prisma.user.findMany() select ฟิลด์สำคัญ ไม่ include password
+//   เรียงจากใหม่→เก่า (createdAt desc)
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
@@ -27,64 +27,15 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-// สร้าง user ใหม่
-export const createUser = async (req: Request, res: Response) => {
-  try {
-    const { email, password, firstName, lastName, phone, position, type, departmentId } = req.body;
 
-    if (!email || !password || !firstName || !lastName || !departmentId) {
-      res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบ' });
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      res.status(400).json({ success: false, message: 'รูปแบบอีเมลไม่ถูกต้อง' });
-      return;
-    }
-    if (password.length < 6) {
-      res.status(400).json({ success: false, message: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' });
-      return;
-    }
-    if (phone && !/^[0-9+\-\s()]{9,15}$/.test(phone)) {
-      res.status(400).json({ success: false, message: 'รูปแบบเบอร์โทรไม่ถูกต้อง' });
-      return;
-    }
-
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      res.status(400).json({ success: false, message: 'อีเมลนี้มีอยู่ในระบบแล้ว' });
-      return;
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        phone,
-        position,
-        type: type || 'staff',
-        departmentId,
-      },
-      select: {
-        id: true, email: true, firstName: true, lastName: true,
-        type: true, status: true, department: { select: { name: true } },
-      },
-    });
-
-    res.status(201).json({ success: true, data: user });
-  } catch (error) {
-    res.status(400).json({ success: false, message: 'เกิดข้อผิดพลาด' });
-  }
-};
-
-// แก้ไข user
+// updateUser → validate (email, phone ถ้าส่งมา)
+//   → phone ?? null / position ?? null  ← null = ล้างค่าเดิม, undefined = ข้าม Prisma update
+//   → ไม่อนุญาตให้ Admin เปลี่ยน password ของ user
+//   → prisma.user.update({ where: { id } })
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
-    const { email, firstName, lastName, phone, position, type, status, departmentId, password } = req.body;
+    const { email, firstName, lastName, phone, position, type, status, departmentId } = req.body;
 
     if (email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -92,10 +43,6 @@ export const updateUser = async (req: Request, res: Response) => {
         res.status(400).json({ success: false, message: 'รูปแบบอีเมลไม่ถูกต้อง' });
         return;
       }
-    }
-    if (password && password.length < 6) {
-      res.status(400).json({ success: false, message: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' });
-      return;
     }
     if (phone && !/^[0-9+\-\s()]{9,15}$/.test(phone)) {
       res.status(400).json({ success: false, message: 'รูปแบบเบอร์โทรไม่ถูกต้อง' });
@@ -107,11 +54,6 @@ export const updateUser = async (req: Request, res: Response) => {
       phone: phone ?? null,
       position: position ?? null,
     };
-
-    // ถ้าส่ง password มาด้วย ให้ hash ใหม่
-    if (password) {
-      data.password = await bcrypt.hash(password, 10);
-    }
 
     const user = await prisma.user.update({
       where: { id },
@@ -128,7 +70,9 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-// เช็ค dependency ก่อน deactivate
+// getUserDependencies → prisma.meetingRoom.findMany({ managerId })  ← ห้องที่ดูแลอยู่
+//                     → prisma.booking.count({ userId, status: pending/approved })
+// ← frontend ใช้ข้อมูลนี้แสดงใน modal ก่อนปิดใช้งาน
 export const getUserDependencies = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -148,7 +92,9 @@ export const getUserDependencies = async (req: Request, res: Response) => {
   }
 };
 
-// ปิดการใช้งาน user (deactivate)
+// deactivateUser → เช็ค managingRooms + activeBookings อีกรอบ (ป้องกัน race condition)
+//   → ถ้ายังมี dependency → return 400
+//   → prisma.user.update({ status: 'inactive' })  ← soft deactivate ไม่ลบข้อมูล
 export const deactivateUser = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -178,7 +124,7 @@ export const deactivateUser = async (req: Request, res: Response) => {
   }
 };
 
-// เปิดการใช้งาน user (activate)
+// activateUser → prisma.user.update({ status: 'active' })
 export const activateUser = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
