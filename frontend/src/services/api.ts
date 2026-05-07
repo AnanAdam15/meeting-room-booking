@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // สร้าง axios instance
 const api = axios.create({
-  baseURL: '/api', // จะถูก proxy ไปที่ localhost:5000/api
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
