@@ -70,7 +70,11 @@ const RoomsPage = () => {
 
   const getImageUrl = (imagePath: string | null) => {
     if (!imagePath) return null;
-    return imagePath;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const baseUrl = apiUrl.replace('/api', '');
+    // Remove /uploads/ prefix if already present
+    const filename = imagePath.replace(/^\/uploads\//, '');
+    return `${baseUrl}/uploads/${filename}`;
   };
 
   if (isLoading) {
