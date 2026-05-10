@@ -163,7 +163,7 @@ async function main() {
       capacity: 10,
       description: 'ห้องประชุมขนาดเล็ก เหมาะสำหรับประชุมทีม 5-10 คน มี Whiteboard และ TV Screen',
       status: 'available',
-      image: '/uploads/room-a101.jpg.png',
+      image: 'room-a101.jpg.png',
     },
     {
       id: 'room-a102',
@@ -172,7 +172,7 @@ async function main() {
       capacity: 8,
       description: 'ห้องประชุมขนาดเล็ก สำหรับประชุมย่อย หรือสัมภาษณ์งาน',
       status: 'available',
-      image: '/uploads/room-a102.jpg.png',
+      image: 'room-a102.jpg.png',
     },
     {
       id: 'room-a201',
@@ -181,7 +181,7 @@ async function main() {
       capacity: 20,
       description: 'ห้องประชุมขนาดกลาง พร้อม Projector และระบบเสียง',
       status: 'available',
-      image: '/uploads/room-a201.jpg.png',
+      image: 'room-a201.jpg.png',
     },
     {
       id: 'room-a202',
@@ -190,7 +190,7 @@ async function main() {
       capacity: 15,
       description: 'ห้องประชุมขนาดกลาง มีระบบ Video Conference สำหรับประชุมออนไลน์',
       status: 'available',
-      image: '/uploads/room-a202.jpg.png',
+      image: 'room-a202.jpg.png',
     },
     {
       id: 'room-a-vip',
@@ -199,7 +199,7 @@ async function main() {
       capacity: 12,
       description: 'ห้องประชุม VIP สำหรับผู้บริหาร ตกแต่งพิเศษ มีครบทุกสิ่งอำนวยความสะดวก',
       status: 'available',
-      image: '/uploads/room-a-vip.jpg.png',
+      image: 'room-a-vip.jpg.png',
     },
 
     // --- อาคาร B (อาคารผู้ป่วย / แพทย์) ---
@@ -210,7 +210,7 @@ async function main() {
       capacity: 12,
       description: 'ห้องประชุมสำหรับแพทย์และทีมรักษา ทบทวนเคส Morning Round',
       status: 'available',
-      image: '/uploads/room-b101.jpg.png',
+      image: 'room-b101.jpg.png',
     },
     {
       id: 'room-b102',
@@ -219,7 +219,7 @@ async function main() {
       capacity: 12,
       description: 'ห้องประชุมสำหรับแพทย์และทีมรักษา สำหรับแผนกศัลยกรรม',
       status: 'available',
-      image: '/uploads/room-b102.jpg.png',
+      image: 'room-b102.jpg.png',
     },
     {
       id: 'room-b201',
@@ -228,7 +228,7 @@ async function main() {
       capacity: 25,
       description: 'ห้องประชุมสำหรับทีมพยาบาล Morning/Evening Brief',
       status: 'available',
-      image: '/uploads/room-b201.jpg.png',
+      image: 'room-b201.jpg.png',
     },
     {
       id: 'room-b301',
@@ -237,7 +237,7 @@ async function main() {
       capacity: 40,
       description: 'ห้องอบรมและฝึกทักษะพยาบาล มีอุปกรณ์ฝึกซ้อม Projector และไมโครโฟน',
       status: 'available',
-      image: '/uploads/room-b301.jpg.png',
+      image: 'room-b301.jpg.png',
     },
     {
       id: 'room-b401',
@@ -246,7 +246,7 @@ async function main() {
       capacity: 8,
       description: 'ห้องประชุมใกล้ ICU สำหรับประชุมด่วน ทบทวนผู้ป่วยวิกฤต',
       status: 'available',
-      image: '/uploads/room-b401.jpg.png',
+      image: 'room-b401.jpg.png',
     },
 
     // --- อาคาร C (ศูนย์การประชุมและอบรม) ---
@@ -257,7 +257,7 @@ async function main() {
       capacity: 200,
       description: 'ห้องประชุมใหญ่ที่สุด สำหรับงานสัมมนา ประชุมทั้งโรงพยาบาล มีเวที ระบบเสียงครบ',
       status: 'available',
-      image: '/uploads/room-c-grand.jpg.png',
+      image: 'room-c-grand.jpg.png',
     },
     {
       id: 'room-c201',
@@ -266,7 +266,7 @@ async function main() {
       capacity: 60,
       description: 'ห้องสัมมนาขนาดใหญ่ พร้อม Projector คู่ ระบบไมค์ไร้สาย',
       status: 'available',
-      image: '/uploads/room-c201.jpg.png',
+      image: 'room-c201.jpg.png',
     },
     {
       id: 'room-c202',
@@ -275,7 +275,7 @@ async function main() {
       capacity: 50,
       description: 'ห้องสัมมนาขนาดกลาง สำหรับจัดอบรมภายนอก/ภายใน',
       status: 'available',
-      image: '/uploads/room-c202.jpg.png',
+      image: 'room-c202.jpg.png',
     },
     {
       id: 'room-c301',
@@ -284,7 +284,7 @@ async function main() {
       capacity: 30,
       description: 'ห้องอบรมพร้อม Flipchart และ Projector เหมาะสำหรับ Workshop',
       status: 'available',
-      image: '/uploads/room-c301.jpg.png',
+      image: 'room-c301.jpg.png',
     },
     {
       id: 'room-c302',
@@ -293,7 +293,7 @@ async function main() {
       capacity: 30,
       description: 'ห้องอบรมขนาดกลาง จัด Layout แบบ Classroom ได้',
       status: 'available',
-      image: '/uploads/room-c302.jpg.png',
+      image: 'room-c302.jpg.png',
     },
     {
       id: 'room-c-vidconf',
@@ -302,7 +302,7 @@ async function main() {
       capacity: 15,
       description: 'ห้องประชุมทางไกล ระบบ Video Conference คุณภาพสูง สำหรับประชุมกับหน่วยงานภายนอก',
       status: 'available',
-      image: '/uploads/room-c-vidconf.jpg.png',
+      image: 'room-c-vidconf.jpg.png',
     },
 
     // --- อาคาร D (ฝ่ายสนับสนุน) ---
@@ -313,7 +313,7 @@ async function main() {
       capacity: 10,
       description: 'ห้องประชุมแผนก IT สำหรับ Sprint Planning, Stand-up, Code Review',
       status: 'available',
-      image: '/uploads/room-d-it.jpg.png',
+      image: 'room-d-it.jpg.png',
     },
     {
       id: 'room-d-hr',
@@ -322,7 +322,7 @@ async function main() {
       capacity: 12,
       description: 'ห้องประชุมแผนก HR สำหรับสัมภาษณ์งาน ประชุมบุคลากร',
       status: 'available',
-      image: '/uploads/room-d-hr.jpg.png',
+      image: 'room-d-hr.jpg.png',
     },
     {
       id: 'room-d-finance',
@@ -331,7 +331,7 @@ async function main() {
       capacity: 10,
       description: 'ห้องประชุมแผนกการเงินและบัญชี สำหรับนำเสนองบประมาณ',
       status: 'available',
-      image: '/uploads/room-d-finance.jpg.png',
+      image: 'room-d-finance.jpg.png',
     },
     {
       id: 'room-d501',
@@ -340,7 +340,7 @@ async function main() {
       capacity: 20,
       description: 'ห้องประชุมอเนกประสงค์ สำหรับประชุมข้ามแผนก',
       status: 'available',
-      image: '/uploads/room-d501.jpg.png',
+      image: 'room-d501.jpg.png',
     },
 
     // --- อาคารการศึกษา ---
@@ -351,7 +351,7 @@ async function main() {
       capacity: 40,
       description: 'ห้องเรียนสำหรับนักศึกษาแพทย์และแพทย์ฝึกหัด มี Projector และ Whiteboard ขนาดใหญ่',
       status: 'available',
-      image: '/uploads/room-edu-101.jpg.png',
+      image: 'room-edu-101.jpg.png',
     },
     {
       id: 'room-edu-102',
@@ -360,7 +360,7 @@ async function main() {
       capacity: 40,
       description: 'ห้องเรียนขนาดใหญ่ สำหรับการบรรยายและ Case Discussion',
       status: 'available',
-      image: '/uploads/room-edu-102.jpg.png',
+      image: 'room-edu-102.jpg.png',
     },
     {
       id: 'room-sim',
@@ -369,7 +369,7 @@ async function main() {
       capacity: 20,
       description: 'ห้องฝึกซ้อมทักษะทางการแพทย์ มีระบบ Video สำหรับ Debrief',
       status: 'available',
-      image: '/uploads/room-sim.jpg.png',
+      image: 'room-sim.jpg.png',
     },
 
     // --- อาคารบริหาร ---
@@ -380,7 +380,7 @@ async function main() {
       capacity: 20,
       description: 'ห้องประชุมคณะกรรมการบริหาร ตกแต่งพิเศษ ใช้สำหรับประชุมระดับสูง',
       status: 'available',
-      image: '/uploads/room-board.jpg.png',
+      image: 'room-board.jpg.png',
     },
     {
       id: 'room-press',
@@ -389,7 +389,7 @@ async function main() {
       capacity: 50,
       description: 'ห้องสำหรับแถลงข่าวและกิจกรรมสาธารณะ มีระบบเสียงและแสงครบครัน',
       status: 'available',
-      image: '/uploads/room-press.jpg.png',
+      image: 'room-press.jpg.png',
     },
     {
       id: 'room-maint',
@@ -398,7 +398,7 @@ async function main() {
       capacity: 15,
       description: 'ห้องประชุมแผนกวิศวกรรมและซ่อมบำรุง',
       status: 'maintenance',
-      image: '/uploads/room-maint.jpg.png',
+      image: 'room-maint.jpg.png',
     },
   ];
 

@@ -181,7 +181,9 @@ const AdminRoomsPage = () => {
 
   const getImageUrl = (imagePath: string | null) => {
     if (!imagePath) return null;
-    return imagePath;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const baseUrl = apiUrl.replace('/api', '');
+    return `${baseUrl}/uploads/${imagePath}`;
   };
 
   const inputClass = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder:text-slate-300 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all text-sm";
