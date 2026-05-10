@@ -49,7 +49,13 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex">
       {/* ===== Left Panel — Visual ===== */}
-      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-700 to-slate-800">
+      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-700 to-slate-800"
+        style={{
+          backgroundImage: 'url(/images/hospital.jpg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
         {/* Decorative circles */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-20 -right-20 w-80 h-80 bg-cyan-400/15 rounded-full blur-3xl" />
@@ -76,35 +82,6 @@ const LoginPage = () => {
             <span className="text-white/90 font-semibold text-lg tracking-wide">MeetingRoom</span>
           </div>
 
-          {/* Center content */}
-          <div className="max-w-md">
-            <h1 className="text-4xl font-bold text-white leading-tight mb-5">
-              ระบบจอง
-              <br />
-              ห้องประชุม
-              <span className="inline-block ml-2 w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse" />
-            </h1>
-            <p className="text-teal-100/80 text-lg leading-relaxed mb-8">
-              จัดการการจองห้องประชุมภายในโรงพยาบาล
-              อย่างเป็นระบบ สะดวก รวดเร็ว
-            </p>
-
-            {/* Feature highlights */}
-            <div className="space-y-4">
-              {[
-                { icon: '📅', text: 'จองห้องประชุมและตรวจสอบช่วงเวลาว่าง' },
-                { icon: '✅', text: 'ระบบอนุมัติคำขอจองอัตโนมัติ' },
-                { icon: '📧', text: 'แจ้งเตือนผ่านอีเมลก่อนเวลาประชุม' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3 text-teal-100/70">
-                  <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center text-sm border border-white/10">
-                    {item.icon}
-                  </div>
-                  <span className="text-sm">{item.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Footer */}
           <p className="text-teal-200/40 text-xs">

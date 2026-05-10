@@ -72,7 +72,7 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-700 to-slate-800">
+      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-gradient-to-b from-teal-600 via-teal-700 to-teal-900">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-20 -right-20 w-80 h-80 bg-cyan-400/15 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-emerald-400/10 rounded-full blur-2xl" />
@@ -92,6 +92,8 @@ const RegisterPage = () => {
             </div>
             <span className="text-white/90 font-semibold text-lg tracking-wide">MeetingRoom</span>
           </div>
+
+
           <div className="max-w-md">
             <h1 className="text-4xl font-bold text-white leading-tight mb-5">
               สมัครสมาชิก
